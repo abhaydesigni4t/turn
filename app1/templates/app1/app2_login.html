@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Page</title>
+{% load static %}
+<link rel="stylesheet" href="styles.css">
+</head>
+<style>
+    body {
+        font-family: 'Times New Roman', Times, serif;
+        background-image: linear-gradient(to bottom right, #c6c3e6, #8BD6EE);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+     
+    }
+
+    .login-card {
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 300px;
+        
+    }
+
+    .logo-container {
+        background-color: #cfe0ff;
+        text-align: center;
+        margin-bottom: 20px;
+        border-radius: 15px;
+        padding: 5px;
+        width: 97%;
+    }
+
+    .logo-container img {
+        max-width: 100%;
+        height: auto; 
+    }
+
+    .login-form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .login-form input[type="text"],
+    .login-form input[type="password"] {
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    .login-form button {
+        background-color: #071390;
+        color: white;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .login-form button:hover {
+        background-color: #365abf;
+    }
+
+    h2 {
+        text-align: center;
+        margin: 0 0 20px 0;
+    }
+
+      /* Media Queries */
+      @media only screen and (max-width: 768px) {
+        .login-card {
+            width: 80%;
+        }
+    }
+
+    @media only screen and (max-width: 480px) {
+        .login-card {
+            width: 90%;
+        }
+    }
+    
+</style>
+<body>
+<div class="login-container">
+  <div class="login-card">
+    <div class="logo-container">
+      <img src="{% static 'app1/images/logo.jpg' %}" alt="Assure Tech Logo">
+    </div>
+    <h2>ADMIN</h2>
+    <form action="{% url 'login' %}" method="POST" class="login-form">
+    {% csrf_token %}
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password">
+      <button type="submit">LOG IN</button>
+      {% if form.errors %}
+                <div class="error-message">
+                    {% for field, error in form.errors.items %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+    </form>
+  </div>
+</div>
+</body>
+</html>

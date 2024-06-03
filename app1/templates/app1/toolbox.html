@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha384-l2pS9FXoq07xZ8T3is0sZuqA4xsJqHvAWEbflU24M6p0T/zl5sJ46R/DLxUJhSZ+7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>header and footer</title>
+    {% load static %}
+    
+    <style>
+        
+        body {
+            font-family: 'Verdana', sans-serif;
+            width: 100%;
+            margin: 0;
+            padding-top: 10vh;
+            background: #f4f4f4;
+            box-sizing: border-box;
+            height: 900px;
+        }
+
+
+        header {
+        background-color: #071390; 
+        color: white; 
+        text-align: center;
+        padding: 15px 0;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav a {
+        color: white; 
+        padding: 10px 10px;
+        font-size: 14px; 
+        text-decoration: none;
+        display: inline-block;
+        margin-right: 2px;
+        transition: color 0.3s ease; 
+    }
+
+
+        .nav {
+            display: flex;
+            align-items: center;
+            margin-right: 100px;
+        }
+
+        .logo img {
+            max-height: 35px;
+            margin-left: 15px;
+            float: left;
+            border-radius: 20px;
+
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                padding: 10px 0;
+            }
+
+            .nav a {
+                padding: 10px 10px;
+                font-size: 14px;
+            }
+
+        }
+
+        @media (max-width: 480px) {
+            .nav a {
+                padding: 8px 5px;
+                font-size: 12px;
+            }
+
+        }
+
+        .dropdown {
+            display: inline-block;
+            position: relative; 
+            text-align: center; 
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f1f1f1;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap; 
+            max-width: calc(100vw - 40px); 
+            overflow: auto; 
+        }
+
+
+        .dropdown-content a {
+            color: black;
+            padding: 8px 10px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            
+        }
+
+        .nav .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #071390;
+            min-width: 20px;
+            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            
+        }
+
+        .nav .dropdown-content a {
+            float: none;
+            color: white;
+            padding: 6px 6px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-left: 6px;
+          
+        }
+
+        .nav .dropdown-content a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        .nav .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+
+        
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #071390;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            z-index: 1000;
+            font-size: 14px;
+        }
+
+        footer h4,
+        footer p {
+            white-space: nowrap;
+            margin: 0;
+            padding: 2px;
+            display: inline;
+        }
+
+        .footer-bottom {
+            white-space: nowrap;
+            padding-top: 5px;
+        }
+
+        .footer-bottom p {
+            margin: 0;
+        }
+
+        .main-container {
+            display: flex;
+            
+        }
+
+        .main-content {
+            margin-left: 100px;
+            padding: 5px;
+            width: 130%;
+            margin-right: 30px;
+        }
+
+        table {
+            width: 95%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 3px;
+            text-align: center;
+    
+        }
+
+        th {
+            background-color: #071390;
+            color: white;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .add-new-button {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+           
+        }
+
+        td.asset-name {
+            margin-right: 20px;
+        }
+
+        td a {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 5px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            color: white;
+        }
+
+        td a.view {
+            background-color: green;
+        }
+
+        td a.view1 {
+            background-color: purple;
+        }
+
+        td a.view2 {
+            background-color: red;
+        }
+
+        .nav a#site-view {
+            display: flex;
+            align-items: center;
+            margin-left: 15px;
+            margin-right: -90px;
+        }
+
+        .asset-name a {
+            color: black;
+            text-decoration-line: underline;
+        }
+
+        
+
+    
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            
+        }
+
+        .pagination a {
+            color: #071390;
+            padding: 8px 16px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+
+        .pagination a:hover {
+            background-color: #ddd;
+        }
+
+        .pagination .current {
+            background-color: #071390;
+            color: white;
+            margin: 5px;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .pagination a {
+                padding: 8px 10px;
+            }
+        }
+
+        h2{
+            text-align: center;
+            margin-top: 40px;
+          
+        }
+        .link{
+            color: black;
+            text-decoration: underline;
+        }
+
+        .file-icon{
+            color : black
+
+        }
+
+        .hidden-desktop {
+        display: none;
+    }
+
+
+    @media only screen and (max-width: 768px) {
+            .hidden-desktop {
+                display: block;
+            }
+
+            .nav {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                background-color: #071390;
+                width: 60%;
+                top: 70px;
+                left: 0;
+                padding: 10px;
+            }
+
+            .nav.open {
+                display: flex;
+            }
+
+            .nav-toggle-label {
+                display: block;
+                padding: 10px;
+                cursor: pointer;
+            }
+
+            .nav-toggle-label span {
+                display: block;
+                width: 25px;
+                height: 3px;
+                background-color: white;
+                margin: 5px;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px;
+            }
+
+            .logo img {
+                max-height: 25px;
+                margin: 0 0 10px 0;
+            }
+
+            .dropdown-content {
+                left: 0;
+                transform: none;
+                min-width: 100%;
+            }
+
+            .dropdown-content a {
+                text-align: left;
+            }
+
+            .edit-btn,
+            .delete-btn {
+                display: block;
+                margin-bottom: 6px;
+            }
+        }
+
+        @media only screen and (max-width: 768px) {
+            .main-container {
+                margin-top: -5px;
+                margin-left: -20px;
+                margin-right: 5px; 
+                width: calc(100% - 15px);
+                overflow-x: auto; 
+            }
+
+            .main-content{
+                size: 150px;
+            }
+        }
+
+    
+    </style>
+
+</script>
+</head>
+
+<body>
+    <header>
+        <a class="logo" href="#"><img src="{% static 'app1/images/logo.jpg' %}" alt="Logo"></a>
+        <nav class="nav">
+            <div class="dropdown">
+                <a href="{% url 'sites' %}">Site Management</a>
+                <div class="dropdown-content">
+                    <a href="{% url 'sites' %}">Site A</a>
+                    <a href="{% url 'sites' %}">Site B</a>
+                    <a href="{% url 'sites' %}">Site C</a>
+                    <a href="{% url 'sites' %}">Site D</a>
+                </div>
+            </div>
+            <div class="dropdown">
+                <a href="#" class="dropbtn">Language</a>
+                <div class="dropdown-content">
+                    <a href="#">English</a>
+                    <a href="#">Spanish</a>
+                </div>
+            </div>
+            <div class="dropdown">
+                <a href="#" class="dropbtn"><i class="fas fa-user"></i>Profile</a>
+                <div class="dropdown-content">
+                    <a href="#"><i class="fas fa-user"></i>Profile</a>
+                    <a href="{% url 'login' %}"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                </div>
+            </div>
+            <div class="dropdown">
+                <a href="#" class="dropbtn"><i class="fas fa-cog"></i>Settings</a>
+                <div class="dropdown-content">
+                    <a href="#">ABC</a>
+                    <a href="#">ABC</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div id="google_translate_element"></div>
+ 
+    <a class="nav-toggle-label hidden-desktop" onclick="toggleNav()">
+        <i class="fas fa-bars"></i>
+    </a>
+
+    <h2>ToolBox Talks</h2>
+
+    <div class="main-container">
+    <div class="main-content">
+
+        <form method="GET" action="{% url 'filter_toolbox' %}">
+            <label for="selected_date">Filter by Date:</label>
+            <input type="date" id="selected_date" name="selected_date">
+            <button type="submit">Filter</button>
+        </form>
+
+        <a href="{% url 'add_toolbox' %}" class="add-new-button">Add New</a>
+
+        <table>
+            <tr>
+                <th>Document</th>
+                <th>Data</th>
+                <th>Action</th>
+            </tr>
+            {% for document in documents %}
+            <tr>
+                <td>
+                    {% if document.document %}
+                        {% with file_extension=document.document.name|lower|slice:"-4:" %}
+                            <a href="{{ document.document.url }}" target="_blank">
+                                <i class="file-icon {% if file_extension == '.pdf' %}far fa-file-pdf
+                                                {% elif file_extension == '.doc' or file_extension == '.docx' %}far fa-file-word
+                                                {% elif file_extension == '.xls' or file_extension == '.xlsx' %}far fa-file-excel
+                                                {% elif file_extension == '.ppt' or file_extension == '.pptx' %}far fa-file-powerpoint
+                                                {% else %}far fa-file
+                                            {% endif %}"></i>
+                            </a>
+                        {% endwith %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>   
+                <td>{{ document.date }}</td>
+                <td>
+                    <a href="{% url 'edit_toolbox' pk=document.pk %}" class="view1">Edit</a>
+                    <a href="{% url 'delete_toolbox' pk=document.pk %}" class="view2">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    
+        
+        <div class="pagination">
+            <span class="step-links">
+                {% if assets.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ assets.previous_page_number }}">previous</a>
+                {% endif %}
+        
+                <span class="current">
+                    Page {{ assets.number }} of {{ assets.paginator.num_pages }}.
+                </span>
+        
+                {% if assets.has_next %}
+                    <a href="?page={{ assets.next_page_number }}">next</a>
+                    <a href="?page={{ assets.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+    </div>
+    <footer>
+        <p>Email: info@assuretech.com</p>
+        <p>Phone: +1 (123) 456-7890</p>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Assure Tech. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement(
+                {pageLanguage: 'en', includedLanguages: 'en,es'},
+                'google_translate_element'
+            );
+        }
+    </script>
+    
+    <script type="text/javascript"
+            src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit">
+    </script>
+
+    <script>
+        function toggleNav() {
+        var nav = document.querySelector('.nav');
+        nav.classList.toggle('open');
+        }
+    </script>
+    
+</body>
+
+
+
+</html>
