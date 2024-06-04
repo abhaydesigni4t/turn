@@ -1020,6 +1020,10 @@ class DeleteFacialDataImage(APIView):
             return Response("Image not found", status=status.HTTP_404_NOT_FOUND)
 
 import pickle
+from imutils import paths
+import face_recognition
+import pickle
+import cv2
 
 class FacialDataApi(APIView):
     def post(self, request):
@@ -1032,49 +1036,54 @@ class FacialDataApi(APIView):
             except UserEnrolled.DoesNotExist:
                 user = UserEnrolled.objects.create(email=email)
 
-            user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name))
+            user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name+"_"+user.tag_id))
             if not os.path.exists(user_folder):
                 os.makedirs(user_folder)
 
-            existing_images = self.get_existing_images(user_folder)
             for image in images:
-                # Use the original filename of each image
                 image_name = image.name
                 image_path = os.path.join(user_folder, image_name)
                 with open(image_path, 'wb') as f:
                     for chunk in image.chunks():
                         f.write(chunk)
 
-            # Train the facial recognition model and update pickle file
             self.update_pickle(user_folder)
 
             return Response("Images uploaded and facial data updated successfully", status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get_existing_images(self, user_folder):
-        # Return list of existing images in user's directory
-        existing_images = []
-        for file_name in os.listdir(user_folder):
-            if file_name.endswith('.jpg'):
-                existing_images.append(os.path.join(user_folder, file_name))
-        return existing_images
-
     def update_pickle(self, user_folder):
-        # Remove existing pickle file
         pickle_file_path = os.path.join(user_folder, 'encodings.pickle')
-        if os.path.exists(pickle_file_path):
-            os.remove(pickle_file_path)
 
-        # Train the facial recognition model with all images in the directory
-        encodings = self.train_facial_data(user_folder)
+        imagePaths = list(paths.list_images(user_folder))
 
-        # Save encodings to a new pickle file
+        knownEncodings = []
+        knownNames = []
+
+        print(f"Total images found: {len(imagePaths)}")
+
+        for (i, imagePath) in enumerate(imagePaths):
+            print(f"--> processing image {i + 1}/{len(imagePaths)}")
+            name = os.path.basename(os.path.dirname(imagePath))
+
+            image = cv2.imread(imagePath)
+            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+            boxes = face_recognition.face_locations(rgb, model="hog")
+            encodings = face_recognition.face_encodings(rgb, boxes)
+
+            print(f"Found {len(encodings)} face(s) in {imagePath}")
+
+            for encoding in encodings:
+                knownEncodings.append(encoding)
+                knownNames.append(name)
+
+        print('--> encodings:', knownEncodings)
+        print('--> names:', knownNames)
+
+        data = {"encodings": knownEncodings, "names": knownNames}
         with open(pickle_file_path, 'wb') as f:
-            pickle.dump(encodings, f)
+            pickle.dump(data, f)
 
-    def train_facial_data(self, user_folder):
-        encodings = []
-        # Train facial data and get encodings for the user's images
-        # Append the encodings to the encodings list
-        return encodings
+        print('--> encodings finalized')

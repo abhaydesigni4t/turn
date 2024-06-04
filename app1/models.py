@@ -80,7 +80,7 @@ class UserEnrolled(models.Model):
         return self.name
 
     def get_folder_name(self):
-        return f"{self.name}"
+        return f"{self.name}_{self.tag_id}"
     
     def save(self, *args, **kwargs):
         if not self.pk: 
