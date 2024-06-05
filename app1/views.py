@@ -636,39 +636,7 @@ def make_inactive_selected(request):
         UserEnrolled.objects.filter(pk__in=selected_record_ids).update(status='inactive')
     return redirect('get_all')
 
-''' class FacialDataApi_extra(APIView):
-    parser_classes = (MultiPartParser,)
 
-    def post(self, request, *args, **kwargs):
-        try:
-            email = request.data.get('email')
-            facial_data = request.FILES.get('facial_data')
-
-            if email:
-                user_enrolled = UserEnrolled.objects.filter(email=email).first()
-
-                if user_enrolled:
-                    if facial_data:
-                        user_enrolled.facial_data = facial_data
-                        user_enrolled.save()
-                    else:
-                        return Response({'error': 'Facial data is required for update'}, status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    if facial_data:
-                        user_enrolled = UserEnrolled.objects.create(
-                            email=email,
-                            facial_data=facial_data
-                        )
-                    else:
-                        return Response({'error': 'Facial data is required for new entry'}, status=status.HTTP_400_BAD_REQUEST)
-
-                serializer = facialDataSerializer(user_enrolled)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response({'error': 'Missing email parameter'}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        '''
 class OrientationListView(generics.ListAPIView):
     queryset = Orientation.objects.all()
     serializer_class = OrientationSerializer
@@ -810,26 +778,6 @@ class PreShiftListCreateAPIView(generics.ListCreateAPIView):
 class ToolBoxListCreateAPIView(generics.ListCreateAPIView):
     queryset = ToolBox.objects.all()
     serializer_class = ToolBoxSerializer
-
-
-from .serializers import FacialImageDataSerializer
-
-class FacialDataApi(APIView):
-    def post(self, request):
-        serializer = FacialImageDataSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            images = serializer.validated_data['facial_data']
-            try:
-                user = UserEnrolled.objects.get(email=email)
-                for image in images:
-                    user.facial_data = image
-                    user.save()
-                return Response("Images uploaded successfully", status=status.HTTP_200_OK)
-            except UserEnrolled.DoesNotExist:
-                return Response("User not found", status=status.HTTP_404_NOT_FOUND)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 
 
 from .serializers import UserProfileSerializer
@@ -1024,6 +972,7 @@ from imutils import paths
 import face_recognition
 import pickle
 import cv2
+from .serializers import FacialImageDataSerializer
 
 class FacialDataApi(APIView):
     def post(self, request):
@@ -1033,20 +982,13 @@ class FacialDataApi(APIView):
             images = serializer.validated_data['facial_data']
             try:
                 user = UserEnrolled.objects.get(email=email)
+                for image in images:
+                    user.facial_data = image
+                    user.save()
+                    
             except UserEnrolled.DoesNotExist:
-                user = UserEnrolled.objects.create(email=email)
-
+                return Response("User not found", status=status.HTTP_404_NOT_FOUND)
             user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name+"_"+user.tag_id))
-            if not os.path.exists(user_folder):
-                os.makedirs(user_folder)
-
-            for image in images:
-                image_name = image.name
-                image_path = os.path.join(user_folder, image_name)
-                with open(image_path, 'wb') as f:
-                    for chunk in image.chunks():
-                        f.write(chunk)
-
             self.update_pickle(user_folder)
 
             return Response("Images uploaded and facial data updated successfully", status=status.HTTP_200_OK)
@@ -1086,4 +1028,98 @@ class FacialDataApi(APIView):
         with open(pickle_file_path, 'wb') as f:
             pickle.dump(data, f)
 
-        print('--> encodings finalized')
+        print('--> encodings finalized') 
+        
+'''     
+class FacialDataApi_extra(APIView):
+    parser_classes = (MultiPartParser,)
+
+    def post(self, request, *args, **kwargs):
+        try:
+            email = request.data.get('email')
+            facial_data = request.FILES.get('facial_data')
+
+            if email:
+                user_enrolled = UserEnrolled.objects.filter(email=email).first()
+
+                if user_enrolled:
+                    if facial_data:
+                        user_enrolled.facial_data = facial_data
+                        user_enrolled.save()
+                    else:
+                        return Response({'error': 'Facial data is required for update'}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    if facial_data:
+                        user_enrolled = UserEnrolled.objects.create(
+                            email=email,
+                            facial_data=facial_data
+                        )
+                    else:
+                        return Response({'error': 'Facial data is required for new entry'}, status=status.HTTP_400_BAD_REQUEST)
+
+                serializer = facialDataSerializer(user_enrolled)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Missing email parameter'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        '''
+    
+'''
+from .serializers import FacialImageDataSerializer
+
+class FacialDataApi(APIView):
+    def post(self, request):
+        serializer = FacialImageDataSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            images = serializer.validated_data['facial_data']
+            try:
+                user = UserEnrolled.objects.get(email=email)
+                for image in images:
+                    user.facial_data = image
+                    user.save()
+                return Response("Images uploaded successfully", status=status.HTTP_200_OK)
+            except UserEnrolled.DoesNotExist:
+                return Response("User not found", status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
+    
+    '''
+
+import os
+import pickle
+
+def load_encodings_from_dir(directory):
+    stored_data_encodings = []
+    stored_data_names = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file == 'encodings.pickle':
+                file_path = os.path.join(root, file)
+                with open(file_path, 'rb') as f:
+                    pickleData = pickle.load(f)
+                    stored_data_encodings.extend(pickleData.get('encodings'))
+                    stored_data_names.extend(pickleData.get('names'))
+    data = {"encodings": stored_data_encodings, "names": stored_data_names}
+    combined_file_path = os.path.join("media", "combined.pickle")
+    with open(combined_file_path, "wb") as f:
+        f.write(pickle.dumps(data))
+    print('--> encodings combined')
+
+load_encodings_from_dir('facial_data')
+
+
+
+from django.http import FileResponse
+import os
+
+class DownloadCombinedFile(APIView):
+    def get(self, request):
+        combined_file_path = os.path.join("media", "combined.pickle")
+        if os.path.exists(combined_file_path):
+            return FileResponse(open(combined_file_path, 'rb'), as_attachment=True)
+        else:
+            return Response({"error": "Combined file does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        
+        
