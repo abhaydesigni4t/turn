@@ -1021,8 +1021,8 @@ class FacialDataApi(APIView):
                 knownEncodings.append(encoding)
                 knownNames.append(name)
 
-        print('--> encodings:', knownEncodings)
-        print('--> names:', knownNames)
+        #print('--> encodings:', knownEncodings)
+        #print('--> names:', knownNames)
 
         data = {"encodings": knownEncodings, "names": knownNames}
         with open(pickle_file_path, 'wb') as f:
@@ -1107,15 +1107,12 @@ def load_encodings_from_dir(directory):
         f.write(pickle.dumps(data))
     print('--> encodings combined')
 
-load_encodings_from_dir('facial_data')
-
-
-
 from django.http import FileResponse
 import os
 
 class DownloadCombinedFile(APIView):
     def get(self, request):
+        load_encodings_from_dir('facial_data')
         combined_file_path = os.path.join("media", "combined.pickle")
         if os.path.exists(combined_file_path):
             return FileResponse(open(combined_file_path, 'rb'), as_attachment=True)
