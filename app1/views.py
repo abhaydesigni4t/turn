@@ -919,6 +919,10 @@ from .models import OnSiteUser
 
 def onsite_user(request):
     user = OnSiteUser.objects.all()
+    paginator = Paginator(user, 10)
+
+    page_number = request.GET.get('page')
+    user = paginator.get_page(page_number)
     return render(request, 'app1/onsite_user.html', {'user': user})
 
 
@@ -1022,7 +1026,7 @@ class FacialDataApi(APIView):
                 knownNames.append(name)
 
         #print('--> encodings:', knownEncodings)
-        #print('--> names:', knownNames)
+        # print('--> names:', knownNames)
 
         data = {"encodings": knownEncodings, "names": knownNames}
         with open(pickle_file_path, 'wb') as f:

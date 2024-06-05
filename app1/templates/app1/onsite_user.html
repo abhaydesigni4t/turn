@@ -221,6 +221,38 @@
             display: none;
         }
 
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            
+        }
+
+        .pagination a {
+            color: #071390;
+            padding: 8px 16px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+
+        .pagination a:hover {
+            background-color: #ddd;
+        }
+
+        .pagination .current {
+            background-color: #071390;
+            color: white;
+            margin: 5px;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .pagination a {
+                padding: 8px 10px;
+            }
+        }
+
         @media only screen and (max-width: 768px) {
             .hidden-desktop {
                 display: block;
@@ -276,6 +308,9 @@
                 text-align: left;
             }
         }
+
+
+        
     </style>
 </head>
 
@@ -351,6 +386,24 @@
                 </table>
                 <button type="submit" class="delete-btn">Delete Selected</button>
             </form>
+
+            <div class="pagination">
+                <span class="step-links">
+                    {% if user.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ user.previous_page_number }}">previous</a>
+                    {% endif %}
+            
+                    <span class="current">
+                        Page {{ user.number }} of {{ user.paginator.num_pages }}.
+                    </span>
+            
+                    {% if user.has_next %}
+                        <a href="?page={{ user.next_page_number }}">next</a>
+                        <a href="?page={{ user.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
         </div>
     </div>
     <footer>
