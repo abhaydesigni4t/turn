@@ -143,27 +143,14 @@ from rest_framework import serializers
 from .models import OnSiteUser
 
 class OnSiteUserSerializer(serializers.ModelSerializer):
-    name_tag_id = serializers.CharField(write_only=True)
-    status = serializers.CharField(max_length=100)
-
     class Meta:
         model = OnSiteUser
-        fields = ['name_tag_id', 'status']
-    
-    def create(self, validated_data):
-        name_tag_id = validated_data.pop('name_tag_id')
-        try:
-            name, tag_id = name_tag_id.split('_')
-        except ValueError:
-            raise serializers.ValidationError("name_tag_id must be in the format 'name_tag_id'.")
-        
-        validated_data['name'] = name
-        validated_data['tag_id'] = tag_id
-        
-        return super().create(validated_data)
+        fields = ['name', 'tag_id', 'status']
 
 
 class OnsiteGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = OnSiteUser
         fields = ['name', 'tag_id', 'status', 'timestamp']
+
+

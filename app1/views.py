@@ -952,9 +952,14 @@ from rest_framework import generics
 from .models import OnSiteUser
 from .serializers import OnSiteUserSerializer
 
-class OnSiteUserCreateView(generics.CreateAPIView):
-    queryset = OnSiteUser.objects.all()
-    serializer_class = OnSiteUserSerializer
+class OnSiteUserCreateAPIView(APIView):
+    def post(self, request):
+        serializer = OnSiteUserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 from rest_framework import generics
@@ -1136,4 +1141,17 @@ class DownloadCombinedFile(APIView):
         else:
             return Response({"error": "Combined file does not exist"}, status=status.HTTP_404_NOT_FOUND)
         
-        
+
+
+class UserNameByTagIdAPIView(APIView):
+    def post(self, request):
+        tag_id = request.data.get('tag_id')
+        if tag_id is not None:
+            try:
+                user = UserEnrolled.objects.get(tag_id=tag_id)
+                return Response({'name': user.name}, status=status.HTTP_200_OK)
+            except UserEnrolled.DoesNotExist:
+                return Response({'error': 'User not found for the provided tag_id'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'error': 'tag_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
