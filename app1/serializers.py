@@ -126,13 +126,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = UserEnrolled
-        fields = ['name', 'company_name', 'job_role', 'mycompany_id', 'job_location']
+        fields = ['name', 'company_name', 'job_role', 'mycompany_id', 'job_location', 'email']
        
     def create(self, validated_data):
         if 'status' not in validated_data:
             validated_data['status'] = 'active'
         return UserEnrolled.objects.create(**validated_data)
-
 
 class UserComplySerializer(serializers.ModelSerializer):
     class Meta:

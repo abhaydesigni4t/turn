@@ -781,14 +781,23 @@ class ToolBoxListCreateAPIView(generics.ListCreateAPIView):
 
 
 from .serializers import UserProfileSerializer
+from rest_framework.exceptions import ValidationError
 
 class UserProfileCreateAPIView(APIView):
     def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if UserEnrolled.objects.filter(email=email).exists():
+            return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        
         serializer = UserProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 def show_facial_data_images(request, user_id):
