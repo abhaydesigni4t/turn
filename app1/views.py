@@ -1128,7 +1128,8 @@ import os
 
 class DownloadCombinedFile(APIView):
     def get(self, request):
-        load_encodings_from_dir('facial_data')
+        faacialDataPath = os.path.join("media", "facial_data")
+        load_encodings_from_dir(faacialDataPath)
         combined_file_path = os.path.join("media", "combined.pickle")
         if os.path.exists(combined_file_path):
             return FileResponse(open(combined_file_path, 'rb'), as_attachment=True)
