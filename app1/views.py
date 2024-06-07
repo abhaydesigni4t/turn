@@ -1004,7 +1004,7 @@ class FacialDataApi(APIView):
                     
             except UserEnrolled.DoesNotExist:
                 return Response("User not found", status=status.HTTP_404_NOT_FOUND)
-            user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name+"_"+user.tag_id))
+            user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name))
             self.update_pickle(user_folder)
 
             return Response("Images uploaded and facial data updated successfully", status=status.HTTP_200_OK)
