@@ -781,7 +781,8 @@ class ToolBoxListCreateAPIView(generics.ListCreateAPIView):
 
 
 from .serializers import UserProfileSerializer
-from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
+from rest_framework import status
 
 class UserProfileCreateAPIView(APIView):
     def post(self, request):
@@ -789,14 +790,16 @@ class UserProfileCreateAPIView(APIView):
         if not email:
             return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
         
-        if UserEnrolled.objects.filter(email=email).exists():
-            return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        serializer = UserProfileSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        existing_user = UserEnrolled.objects.filter(email=email).first()
+        if existing_user:
+            serializer = UserProfileSerializer(existing_user, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'message': 'Email not found. Please sign up.'}, status=status.HTTP_404_NOT_FOUND)
+
 
 
 
