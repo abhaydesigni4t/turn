@@ -62,7 +62,7 @@
             padding-top: 10vh;
             background: #f4f4f4;
             box-sizing: border-box;
-            height: 900px;
+            height: 1200px;
         }
 
         header {
@@ -228,17 +228,7 @@
             color: #071390;
         }
 
-        .add {
-            background-color: #071390;
-            color: white;
-            padding: 6px;
-            border: solid;
-            margin-top: 2px;
-            display: inline-block;
-            text-decoration: none;
-            border-radius: 10px 10px;
-        }
-
+        
         .edit-btn,
         .delete-btn 
         {
@@ -324,15 +314,20 @@
             margin: 5px;
         }
 
-      
-
+    
         #filterStatus option[selected] {
             background-color: #ddd;
         }
-
         .filter-container {
-            margin-bottom: 5px;
-            margin-left: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            margin-left:50px;
+        }
+
+        .status-filter {
+            width:80px; /* Adjust as needed */
         }
 
         
@@ -548,6 +543,27 @@
     }
 
 
+    .add-user-button {
+        background-color: #4caf50;
+        border: none;
+        color: white;
+        padding: 8px 15px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin-top: 7px;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+        margin-right:50px;
+    }
+
+    .add-user-button:hover {
+        background-color: #45a049;
+    }
+
+
     </style>
 </head>
 
@@ -599,7 +615,6 @@
 
     <div class="user">
         <h3 class="heading1">User Management</h3>
-        <a class="add" href="{% url 'create' %}">Add User</a>
     </div>
 
     <div id="table-container">
@@ -623,6 +638,7 @@
                     <option value="Inactive">Inactive</option>
                 </select>
             </form>
+            <a class="add-user-button" href="{% url 'create' %}">Add User</a>
         </div>
         <form method="post" action="{% url 'delete_selected2' %}">
             {% csrf_token %}
@@ -688,7 +704,7 @@
             {% for i in data %}
             <tr>
                 <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
-                <td>{{i.sr}}</td>
+                <td>{{ forloop.counter }}</td>
                 <td>{{i.name}}</td>
                 <td>{{i.company_name}}</td>
                 <td>{{i.job_role}}</td>
@@ -716,7 +732,6 @@
                 </td>
                 {% load custom_filters %}
                 <td>
-                    {% if i.facial_data %}
                     {% with file_extension=i.facial_data.name|lower %}
                     <a href="{% url 'show_facial_data_images' i.pk %}" target="_blank">
                         <i class="far fa-file-image
@@ -730,9 +745,6 @@
                         "></i>
                     </a>
                     {% endwith %}
-                    {% else %}
-                    N/A
-                    {% endif %}
                 </td>
                 <td>
                     {% if i.my_comply %}

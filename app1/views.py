@@ -126,7 +126,7 @@ class get_data(ListView):
     model = UserEnrolled
     template_name = 'app1/getdata.html'
     context_object_name = 'data'
-    paginate_by = 10  
+    paginate_by = 20  
 
     def get_queryset(self):
         return UserEnrolled.objects.all()
@@ -904,6 +904,41 @@ def delete_facial_data_image(request, user_id, filename):
 
 from .forms import SingleFileUploadForm
 
+def update_pickle(user_folder):
+    pickle_file_path = os.path.join(user_folder, 'encodings.pickle')
+
+    imagePaths = list(paths.list_images(user_folder))
+
+    knownEncodings = []
+    knownNames = []
+
+    print(f"Total images found: {len(imagePaths)}")
+
+    for (i, imagePath) in enumerate(imagePaths):
+        print(f"--> processing image {i + 1}/{len(imagePaths)}")
+        name = os.path.basename(os.path.dirname(imagePath))
+
+        image = cv2.imread(imagePath)
+        rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        boxes = face_recognition.face_locations(rgb, model="hog")
+        encodings = face_recognition.face_encodings(rgb, boxes)
+
+        print(f"Found {len(encodings)} face(s) in {imagePath}")
+
+        for encoding in encodings:
+            knownEncodings.append(encoding)
+            knownNames.append(name)
+
+    #print('--> encodings:', knownEncodings)
+    # print('--> names:', knownNames)
+
+    data = {"encodings": knownEncodings, "names": knownNames}
+    with open(pickle_file_path, 'wb') as f:
+        pickle.dump(data, f)
+
+    print('--> encodings finalized')
+        
 def upload_facial_data_image(request, user_id):
     user = get_object_or_404(UserEnrolled, pk=user_id)
     user_folder = os.path.join('media', 'facial_data', user.get_folder_name())
@@ -917,6 +952,7 @@ def upload_facial_data_image(request, user_id):
             with open(file_path, 'wb+') as destination:
                 for chunk in image.chunks():
                     destination.write(chunk)
+            update_pickle(user_folder)        
             messages.success(request, 'Image uploaded successfully.')
             return redirect('show_facial_data_images', user_id=user_id)
     else:

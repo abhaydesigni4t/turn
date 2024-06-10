@@ -90,7 +90,16 @@ class UserEnrolled(models.Model):
             else:
                 self.sr = 1
         super().save(*args, **kwargs)
-    
+        
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+import shutil
+
+@receiver(post_delete, sender=UserEnrolled)
+def delete_user_folder(sender, instance, **kwargs):
+    user_folder = os.path.join('media', 'facial_data', instance.get_folder_name())
+    if os.path.exists(user_folder):
+        shutil.rmtree(user_folder)
     
 class Notification(models.Model):
     sr = models.AutoField(primary_key=True,unique=True)
@@ -214,5 +223,29 @@ class OnSiteUser(models.Model):
     
 
 
+class UserEnrolled50(models.Model):
+    sr = models.AutoField(primary_key=True,unique=True)
+    name = models.CharField(max_length=255)
+    company_name = models.CharField(max_length=100)
+    job_role = models.CharField(max_length=100, choices=[
+        ('role1', 'Role 1'),
+        ('role2', 'Role 2'),
+    ])
+    mycompany_id = models.CharField(max_length=10)
+    tag_id = models.CharField(max_length=50)
+    job_location = models.CharField(max_length=100)
+    orientation = models.FileField(upload_to='attachments/', blank=True,null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
+    facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
+    my_comply = models.ImageField(upload_to='compliance_images/',blank=True, null=True)
+    status = models.CharField(max_length=10, choices=[
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+    ])
+    email = models.EmailField()
+    password = models.CharField(max_length=50)
+
+    
+    def __str__(self):
+        return self.name
 
 
