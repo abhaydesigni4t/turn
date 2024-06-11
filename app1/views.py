@@ -661,6 +661,11 @@ class UpdateTagIDAPIView(APIView):
                 user = UserEnrolled.objects.get(email=email)
             except UserEnrolled.DoesNotExist:
                 return Response({'error': 'User not found for the provided email.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Check if the tag_id already exists
+            if UserEnrolled.objects.filter(tag_id=tag_id).exists():
+                return Response({'error': 'The provided tag ID already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+            
             serializer = UserEnrolledSerializer1(user, data={'tag_id': tag_id}, partial=True)
             if serializer.is_valid():
                 serializer.save()
