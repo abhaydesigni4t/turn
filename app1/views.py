@@ -127,6 +127,17 @@ class get_data(ListView):
     template_name = 'app1/getdata.html'
     context_object_name = 'data'
     paginate_by = 20  
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        page = self.request.GET.get('page')
+        paginator = Paginator(self.get_queryset(), self.paginate_by)
+        page_obj = paginator.get_page(page)
+        offset = self.paginate_by * (page_obj.number - 1)
+        context['offset'] = offset
+        context['page_obj'] = page_obj
+        context['paginator'] = paginator
+        return context
 
     def get_queryset(self):
         return UserEnrolled.objects.all()
@@ -690,6 +701,16 @@ class LoginAPIApp(APIView):
 
 @api_view(['POST'])
 def signup_api_app(request):
+    email = request.data.get('email', '')
+    
+    # Check if the email already exists
+    if UserEnrolled.objects.filter(email=email).exists():
+        return Response({"error": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check if the email ends with @gmail.com
+    if not email.endswith('@gmail.com'):
+        return Response({"error": "Email must end with @gmail.com"}, status=status.HTTP_400_BAD_REQUEST)
+    
     serializer = signup_app(data=request.data)
     if serializer.is_valid():
         serializer.save()

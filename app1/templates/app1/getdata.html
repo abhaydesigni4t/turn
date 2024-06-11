@@ -62,7 +62,7 @@
             padding-top: 10vh;
             background: #f4f4f4;
             box-sizing: border-box;
-            height: 1200px;
+            height: 1000px;
         }
 
         header {
@@ -174,7 +174,7 @@
 
         #table-container {
             margin-top: 20px;
-            margin-left: 10px;
+            margin-left: 5px;
             margin-right: 10px; /* Adjust margin-right as needed */
         }
 
@@ -323,7 +323,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            margin-left:50px;
+            margin-left:5px;
         }
 
         .status-filter {
@@ -547,7 +547,7 @@
         background-color: #4caf50;
         border: none;
         color: white;
-        padding: 8px 15px;
+        padding: 8px 12px;
         text-align: center;
         text-decoration: none;
         display: inline-block;
@@ -556,7 +556,7 @@
         cursor: pointer;
         border-radius: 5px;
         transition: background-color 0.3s;
-        margin-right:50px;
+        margin-right:40px;
     }
 
     .add-user-button:hover {
@@ -620,26 +620,29 @@
     <div id="table-container">
 
         <div class="filter-container">
-         
             <form id="filterForm">
+                <label for="filterName">Name:</label>
+                <input type="text" id="filterName" name="filterName">
+        
                 <label for="filterCompanyName">Company Name:</label>
                 <input type="text" id="filterCompanyName" name="filterCompanyName">
-
+        
                 <label for="filterJobRole">Job Role:</label>
                 <input type="text" id="filterJobRole" name="filterJobRole">
-
+        
                 <label for="filterJobLocation">Job Location:</label>
                 <input type="text" id="filterJobLocation" name="filterJobLocation">
-
+        
                 <label for="filterStatus">Status:</label>
                 <select id="filterStatus" name="filterStatus">
                     <option value="">All</option>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                 </select>
             </form>
-            <a class="add-user-button" href="{% url 'create' %}">Add User</a>
+            <a class="add-user-button" href="{% url 'create' %}">Add</a>
         </div>
+        
         <form method="post" action="{% url 'delete_selected2' %}">
             {% csrf_token %}
         <table id="customers">
@@ -704,7 +707,7 @@
             {% for i in data %}
             <tr>
                 <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
-                <td>{{ forloop.counter }}</td>
+                <td>{{ forloop.counter|add:offset }}</td>
                 <td>{{i.name}}</td>
                 <td>{{i.company_name}}</td>
                 <td>{{i.job_role}}</td>
@@ -805,49 +808,53 @@
 
     <script>
 
-function filterTable() {
-        var filterCompanyName = document.getElementById('filterCompanyName').value.toUpperCase();
-        var filterJobRole = document.getElementById('filterJobRole').value.toUpperCase();
-        var filterJobLocation = document.getElementById('filterJobLocation').value.toUpperCase();
-        var filterStatus = document.getElementById('filterStatus').value.toLowerCase();
-
-        var table = document.getElementById('customers');
-        var rows = table.getElementsByTagName('tr');
-
-        for (var i = 1; i < rows.length; i++) {
-            var row = rows[i];
-            var cols = row.getElementsByTagName('td');
-
-            var companyName = cols[3].textContent || cols[3].innerText;
-            var jobRole = cols[4].textContent || cols[4].innerText;
-            var jobLocation = cols[7].textContent || cols[7].innerText;
-            var status = cols[9].textContent || cols[9].innerText.toLowerCase();
-
-            
-            var showRow = true;
-            if (filterCompanyName && !companyName.toUpperCase().includes(filterCompanyName)) {
-                showRow = false;
+        function filterTable() {
+            var filterName = document.getElementById('filterName').value.toUpperCase();
+            var filterCompanyName = document.getElementById('filterCompanyName').value.toUpperCase();
+            var filterJobRole = document.getElementById('filterJobRole').value.toUpperCase();
+            var filterJobLocation = document.getElementById('filterJobLocation').value.toUpperCase();
+            var filterStatus = document.getElementById('filterStatus').value.toLowerCase();
+        
+            var table = document.getElementById('customers');
+            var rows = table.getElementsByTagName('tr');
+        
+            for (var i = 1; i < rows.length; i++) {
+                var row = rows[i];
+                var cols = row.getElementsByTagName('td');
+        
+                var name = cols[2].textContent || cols[2].innerText;
+                var companyName = cols[3].textContent || cols[3].innerText;
+                var jobRole = cols[4].textContent || cols[4].innerText;
+                var jobLocation = cols[7].textContent || cols[7].innerText;
+                var status = cols[12].textContent || cols[12].innerText;
+        
+                var showRow = true;
+                if (filterName && name.toUpperCase().indexOf(filterName) === -1) {
+                    showRow = false;
+                }
+                if (filterCompanyName && companyName.toUpperCase().indexOf(filterCompanyName) === -1) {
+                    showRow = false;
+                }
+                if (filterJobRole && jobRole.toUpperCase().indexOf(filterJobRole) === -1) {
+                    showRow = false;
+                }
+                if (filterJobLocation && jobLocation.toUpperCase().indexOf(filterJobLocation) === -1) {
+                    showRow = false;
+                }
+                if (filterStatus && status.toLowerCase() !== filterStatus) {
+                    showRow = false;
+                }
+        
+                row.style.display = showRow ? '' : 'none';
             }
-            if (filterJobRole && !jobRole.toUpperCase().includes(filterJobRole)) {
-                showRow = false;
-            }
-            if (filterJobLocation && !jobLocation.toUpperCase().includes(filterJobLocation)) {
-                showRow = false;
-            }
-            if (filterStatus && status !== filterStatus) {
-                showRow = false;
-            }
-
-            row.style.display = showRow ? '' : 'none';
         }
-    }
-
-    document.getElementById('filterCompanyName').addEventListener('input', filterTable);
-    document.getElementById('filterJobRole').addEventListener('input', filterTable);
-    document.getElementById('filterJobLocation').addEventListener('input', filterTable);
-    document.getElementById('filterStatus').addEventListener('change', filterTable);
-
-
+        
+        document.getElementById('filterName').addEventListener('input', filterTable);
+        document.getElementById('filterCompanyName').addEventListener('input', filterTable);
+        document.getElementById('filterJobRole').addEventListener('input', filterTable);
+        document.getElementById('filterJobLocation').addEventListener('input', filterTable);
+        document.getElementById('filterStatus').addEventListener('change', filterTable);
+        
 
     function toggleFilter(column, currentSortBy) {
     let newSortBy = column;

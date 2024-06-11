@@ -82,14 +82,7 @@ class UserEnrolled(models.Model):
     def get_folder_name(self):
         return self.name
     
-    def save(self, *args, **kwargs):
-        if not self.pk: 
-            last_instance = self.__class__.objects.last()
-            if last_instance:
-                self.sr = last_instance.sr + 1
-            else:
-                self.sr = 1
-        super().save(*args, **kwargs)
+    
         
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
@@ -221,31 +214,5 @@ class OnSiteUser(models.Model):
         return self.name
     
     
-
-
-class UserEnrolled50(models.Model):
-    sr = models.AutoField(primary_key=True,unique=True)
-    name = models.CharField(max_length=255)
-    company_name = models.CharField(max_length=100)
-    job_role = models.CharField(max_length=100, choices=[
-        ('role1', 'Role 1'),
-        ('role2', 'Role 2'),
-    ])
-    mycompany_id = models.CharField(max_length=10)
-    tag_id = models.CharField(max_length=50)
-    job_location = models.CharField(max_length=100)
-    orientation = models.FileField(upload_to='attachments/', blank=True,null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
-    facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
-    my_comply = models.ImageField(upload_to='compliance_images/',blank=True, null=True)
-    status = models.CharField(max_length=10, choices=[
-        ('active', 'Active'),
-        ('inactive', 'Inactive'),
-    ])
-    email = models.EmailField()
-    password = models.CharField(max_length=50)
-
-    
-    def __str__(self):
-        return self.name
 
 
