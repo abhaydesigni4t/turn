@@ -379,7 +379,7 @@
                             <td>{{ i.name }}</td>
                             <td>{{ i.tag_id }}</td>
                             <td>{{ i.status }}</td>
-                            <td>{{ i.timestamp}}</td>
+                            <td>{{ i.timestamp|date:"Y-m-d h:i:s A" }}</td> 
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -430,18 +430,18 @@
         function filterTable() {
             var filterName = document.getElementById('filterName').value.toUpperCase();
             var filterDate = document.getElementById('filterDate').value;
-
+        
             var table = document.getElementById('users');
             var rows = table.getElementsByTagName('tr');
-
+        
             for (var i = 1; i < rows.length; i++) {
                 var row = rows[i];
                 var cols = row.getElementsByTagName('td');
-
+        
                 var name = cols[1].textContent || cols[1].innerText;
                 var timestamp = cols[4].textContent || cols[4].innerText;
                 var date = timestamp.split(' ')[0]; // Extract the date part of the timestamp
-
+        
                 var showRow = true;
                 if (filterName && !name.toUpperCase().includes(filterName)) {
                     showRow = false;
@@ -449,13 +449,15 @@
                 if (filterDate && date !== filterDate) {
                     showRow = false;
                 }
-
+        
                 row.style.display = showRow ? '' : 'none';
             }
         }
-
+        
         document.getElementById('filterName').addEventListener('input', filterTable);
         document.getElementById('filterDate').addEventListener('input', filterTable);
+        
+        
     </script>
 </body>
 
