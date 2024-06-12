@@ -467,7 +467,7 @@
                 <td>{{ asset.status }}</td>
                 <td>
                     <a href="{% url 'update_asset' asset_id=asset.asset_id %}" class="view1">Edit</a>
-                    <a href="#" class="view2">Delete</a>
+                    <a href="{% url 'delete_asset' asset_id=asset.asset_id %}" class="view2">Delete</a>
                 </td>
             </tr>
             {% endfor %}

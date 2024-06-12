@@ -223,6 +223,16 @@ def update_asset(request, asset_id):
     
     return render(request, 'app1/add_asset.html', {'form': form})
 
+def delete_asset(request, asset_id):
+    asset = get_object_or_404(Asset, asset_id=asset_id)
+    
+    if request.method == 'POST':
+        asset.delete()
+        messages.success(request, 'Asset deleted successfully.')
+        return redirect('asset_site')
+    
+    return render(request, 'app1/data_confirm_delete9.html', {'asset': asset})
+
 def asset_site(request):
     assets = Asset.objects.all()
     paginator = Paginator(assets, 8)

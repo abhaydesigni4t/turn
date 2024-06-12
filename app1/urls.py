@@ -29,6 +29,7 @@ urlpatterns = [
     path('asset_site/',views.asset_site,name='asset_site'),
     path('add_asset/',views.add_asset,name='add_asset'),
     path('update_asset/<int:asset_id>/', views.update_asset, name='update_asset'),
+    path('delete_asset/<int:asset_id>/', views.delete_asset, name='delete_asset'),
     path('asset_details/<int:asset_id>/', views.asset_details, name='asset_details'),
     path('download-db/', DownloadDatabaseView.as_view(), name='download-db'),  # download in sqlite3 that is binary
     path('detect_changes/', ChangeDetectionView.as_view(), name='detect-changes'),
