@@ -704,6 +704,8 @@ class LoginAPIApp(APIView):
             return Response({'message': 'Login successful', 'name': name}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+import re
+
 @api_view(['POST'])
 def signup_api_app(request):
     email = request.data.get('email', '')
@@ -712,10 +714,11 @@ def signup_api_app(request):
     if UserEnrolled.objects.filter(email=email).exists():
         return Response({"error": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
     
-    # Check if the email ends with @gmail.com
-    if not email.endswith('@gmail.com'):
-        return Response({"error": "Email must end with @gmail.com"}, status=status.HTTP_400_BAD_REQUEST)
-    
+    # Email format validation using regex
+    pat = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
+    if not re.match(pat, email):
+        return Response({"error": "Invalid Email format"}, status=status.HTTP_400_BAD_REQUEST)
+
     serializer = signup_app(data=request.data)
     if serializer.is_valid():
         serializer.save()
