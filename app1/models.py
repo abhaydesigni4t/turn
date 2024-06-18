@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.core.validators import FileExtensionValidator
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.contrib.auth.hashers import make_password, check_password
-
+from django.conf import settings
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
@@ -56,12 +56,9 @@ def user_image_upload_path(instance, filename):
 
 class UserEnrolled(models.Model):
     sr = models.AutoField(primary_key=True,unique=True)
+    picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
     name = models.CharField(max_length=255)
     company_name = models.CharField(max_length=100)
-    job_role = models.CharField(max_length=100, choices=[
-        ('role1', 'Role 1'),
-        ('role2', 'Role 2'),
-    ])
     mycompany_id = models.CharField(max_length=10)
     tag_id = models.CharField(max_length=50)
     job_location = models.CharField(max_length=100)
@@ -115,6 +112,7 @@ class Site_management(models.Model):
 
 class Asset(models.Model):
     asset_id = models.IntegerField(unique=True)
+    picture = models.ImageField(upload_to='asset_pictures/', blank=True, null=True)
     asset_name = models.CharField(max_length=255)
     tag_id = models.IntegerField(unique=True)
     footage = models.ImageField(upload_to='assets_footage/', blank=True, null=True,verbose_name= 'Footage')
@@ -136,8 +134,14 @@ class check_changes(models.Model):
     timestamp = models.DateTimeField(auto_now=True) 
    
 class Site(models.Model):
-    name = models.CharField(max_length=100)
+    picture = models.ImageField(upload_to='site_pictures/', blank=True, null=True)
+    name = models.CharField(max_length=100,unique=True)
+    location = models.CharField(max_length=100)
 
+    def save(self, *args, **kwargs):
+        self.name = self.name.upper()
+        super(Site, self).save(*args, **kwargs)
+        
     def __str__(self):
         return self.name
 

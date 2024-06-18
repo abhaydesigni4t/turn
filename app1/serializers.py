@@ -21,7 +21,7 @@ class AssetSerializer(serializers.ModelSerializer):
 class UserEnrolledSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserEnrolled
-        fields = ['name','company_name','job_role','mycompany_id','tag_id','job_location','orientation','status']
+        fields = ['name','company_name','mycompany_id','tag_id','job_location','orientation','status']
        
 class UserEnrolledSerializer1(serializers.ModelSerializer):
     class Meta:
@@ -41,7 +41,7 @@ class ExitSerializer(serializers.ModelSerializer):
 class SiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Site
-        fields = ['id', 'name']
+        fields = ['picture','name','location']
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -154,3 +154,11 @@ class OnsiteGetSerializer(serializers.ModelSerializer):
         fields = ['name', 'tag_id', 'status', 'timestamp']
 
 
+class PostSiteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Site
+        fields = ['picture', 'name', 'location']
+        
+        
+class EmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()

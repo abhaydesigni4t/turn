@@ -325,7 +325,9 @@
     <div id="table-container">
         <table id="customers">
             <tr>
+                <th>Picture</th>
                 <th>Site Name</th>
+                <th>Location</th>
                 <th>Total Worker</th>
                 <th>Active Worker</th>
                 <th>Inactive Worker</th>
@@ -333,7 +335,15 @@
             </tr>
             {% for site in sites %}
             <tr>
+                <td>
+                    {% if site.picture %}
+                    <img src="{{ site.picture.url }}" alt="Site" style="width: 50px; height: auto;">
+                    {% else %}
+                    <img src="{% static 'app1/images/site.jpg' %}" alt="Site" style="width: 50px; height: auto;">
+                    {% endif %}
+                </td>
                 <td><a href="{% url 'management' %}">{{ site.name }}</a></td>
+                <td>{{ site.location }}</td>
                 <td>{{ total_users }}</td>
                 <td>{{ active_users }}</td>
                 <td>{{ inactive_users }}</td>

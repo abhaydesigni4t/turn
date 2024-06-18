@@ -323,7 +323,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            margin-left:5px;
+            margin-left:60px;
         }
 
         .status-filter {
@@ -417,6 +417,7 @@
         padding: 4px;
         margin-top: 1px;
         font-size: 12px;
+       
     }
 
     .edit-btn,
@@ -556,7 +557,7 @@
         cursor: pointer;
         border-radius: 5px;
         transition: background-color 0.3s;
-        margin-right:40px;
+        margin-right:70px;
     }
 
     .add-user-button:hover {
@@ -626,9 +627,7 @@
         
                 <label for="filterCompanyName">Company Name:</label>
                 <input type="text" id="filterCompanyName" name="filterCompanyName">
-        
-                <label for="filterJobRole">Job Role:</label>
-                <input type="text" id="filterJobRole" name="filterJobRole">
+
         
                 <label for="filterJobLocation">Job Location:</label>
                 <input type="text" id="filterJobLocation" name="filterJobLocation">
@@ -654,6 +653,7 @@
                         Sr No
                     </div>
                 </th>
+                <th>Picture</th>
                 <th>
                     <div>
                         <span class="filter-icon" onclick="toggleFilter('name', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
@@ -666,12 +666,7 @@
                         Company Name
                     </div>
                 </th>
-                <th>
-                    <div>
-                        <span class="filter-icon" onclick="toggleFilter('job_role', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
-                        Job Role
-                    </div>
-                </th>
+            
     
                 <th>
                     <div>
@@ -708,9 +703,15 @@
             <tr>
                 <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
                 <td>{{ forloop.counter|add:offset }}</td>
+                <td>
+                    {% if i.picture %}
+                    <img src="{{ i.picture.url }}" alt="user" style="width: 50px; height: auto;">
+                    {% else %}
+                    <img src="{% static 'app1/images/site.jpg' %}" alt="user" style="width: 50px; height: auto;">
+                    {% endif %}
+                </td>
                 <td>{{i.name}}</td>
                 <td>{{i.company_name}}</td>
-                <td>{{i.job_role}}</td>
                 <td>{{i.mycompany_id}}</td>
                 <td>{{i.tag_id}}</td>
                 <td>{{i.job_location}}</td>
@@ -811,7 +812,7 @@
         function filterTable() {
             var filterName = document.getElementById('filterName').value.toUpperCase();
             var filterCompanyName = document.getElementById('filterCompanyName').value.toUpperCase();
-            var filterJobRole = document.getElementById('filterJobRole').value.toUpperCase();
+            
             var filterJobLocation = document.getElementById('filterJobLocation').value.toUpperCase();
             var filterStatus = document.getElementById('filterStatus').value.toLowerCase();
         
@@ -822,9 +823,9 @@
                 var row = rows[i];
                 var cols = row.getElementsByTagName('td');
         
-                var name = cols[2].textContent || cols[2].innerText;
-                var companyName = cols[3].textContent || cols[3].innerText;
-                var jobRole = cols[4].textContent || cols[4].innerText;
+                var name = cols[3].textContent || cols[3].innerText;
+                var companyName = cols[4].textContent || cols[4].innerText;
+                
                 var jobLocation = cols[7].textContent || cols[7].innerText;
                 var status = cols[12].textContent || cols[12].innerText;
         
@@ -835,9 +836,7 @@
                 if (filterCompanyName && companyName.toUpperCase().indexOf(filterCompanyName) === -1) {
                     showRow = false;
                 }
-                if (filterJobRole && jobRole.toUpperCase().indexOf(filterJobRole) === -1) {
-                    showRow = false;
-                }
+                
                 if (filterJobLocation && jobLocation.toUpperCase().indexOf(filterJobLocation) === -1) {
                     showRow = false;
                 }
@@ -851,7 +850,7 @@
         
         document.getElementById('filterName').addEventListener('input', filterTable);
         document.getElementById('filterCompanyName').addEventListener('input', filterTable);
-        document.getElementById('filterJobRole').addEventListener('input', filterTable);
+        
         document.getElementById('filterJobLocation').addEventListener('input', filterTable);
         document.getElementById('filterStatus').addEventListener('change', filterTable);
         

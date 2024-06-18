@@ -155,7 +155,7 @@ class create_data(CreateView):
 
 class UpdateData(UpdateView):
     model = UserEnrolled 
-    fields = ['name','company_name','job_role','mycompany_id','tag_id','job_location','orientation','facial_data','my_comply','status','email']     
+    fields = ['name','company_name','mycompany_id','tag_id','job_location','orientation','facial_data','my_comply','status','email']     
     template_name = 'app1/add_user.html'
     success_url = reverse_lazy('get_all')
 
@@ -369,7 +369,7 @@ class SiteListAPIView(generics.ListAPIView):
 
 def add_site(request):
     if request.method == 'POST':
-        form = SiteForm(request.POST)
+        form = SiteForm(request.POST,request.FILES)
         if form.is_valid():
             form.save()
             return redirect('sites') 
@@ -936,6 +936,19 @@ def delete_facial_data_image(request, user_id, filename):
     if os.path.exists(file_path):
         os.remove(file_path)
         messages.success(request, 'Image deleted successfully.')
+
+        # Get all images in the user's facial_data folder after deletion
+        user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+
+        # Check if there are images and the current picture is not in the user's folder
+        if user_images and (not user.picture or os.path.basename(user.picture.name) not in user_images):
+            # Find the next available image and set it as the user's picture
+            for img_name in user_images:
+                if not user.picture or img_name != os.path.basename(user.picture.name):
+                    user.picture = os.path.join('facial_data', user.get_folder_name(), img_name)
+                    user.save()
+                    break
+
     else:
         messages.error(request, 'Image not found.')
 
@@ -977,6 +990,8 @@ def update_pickle(user_folder):
         pickle.dump(data, f)
 
     print('--> encodings finalized')
+ 
+import random
         
 def upload_facial_data_image(request, user_id):
     user = get_object_or_404(UserEnrolled, pk=user_id)
@@ -991,7 +1006,26 @@ def upload_facial_data_image(request, user_id):
             with open(file_path, 'wb+') as destination:
                 for chunk in image.chunks():
                     destination.write(chunk)
-            update_pickle(user_folder)        
+            update_pickle(user_folder)  # Update any relevant data or pickle files
+
+            # Get all images in the user's facial_data folder
+            user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+
+            # Debugging: Print the images found in the folder
+            print(f"Images found in {user_folder}: {user_images}")
+
+            # Set a random image as the user's picture
+            if user_images:
+                random_image = random.choice(user_images)
+                user.picture = os.path.join('facial_data', user.get_folder_name(), random_image)
+                user.save()
+
+                # Debugging: Print the selected random image
+                print(f"Selected random image for {user}: {random_image}")
+            else:
+                user.picture = None  # No image found, set picture to None or another default value
+                user.save()
+
             messages.success(request, 'Image uploaded successfully.')
             return redirect('show_facial_data_images', user_id=user_id)
     else:
@@ -1001,7 +1035,7 @@ def upload_facial_data_image(request, user_id):
         'form': form,
         'user_id': user_id
     })
-
+    
 from .models import OnSiteUser
 
 def onsite_user(request):
@@ -1080,6 +1114,11 @@ class FacialDataApi(APIView):
                 user = UserEnrolled.objects.get(email=email)
                 for image in images:
                     user.facial_data = image
+                    user.save()
+                    
+                if images:
+                    random_image = random.choice(images)
+                    user.picture = random_image
                     user.save()
                     
             except UserEnrolled.DoesNotExist:
@@ -1230,3 +1269,65 @@ class UserNameByTagIdAPIView(APIView):
         else:
             return Response({'error': 'tag_id is required'}, status=status.HTTP_400_BAD_REQUEST)
 
+from .serializers import PostSiteSerializer
+
+class SiteCreateAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = PostSiteSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class SiteDeleteByNameAPIView(APIView):
+    def delete(self, request, *args, **kwargs):
+        name = request.data.get('name', None)
+        if name is not None:
+            try:
+                site = Site.objects.get(name__iexact=name)
+                site.delete()
+                return Response({'message': 'Site deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+            except Site.DoesNotExist:
+                return Response({'error': 'Site not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Name parameter not provided'}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+class UserEnrolledStatusCountView(APIView):
+    def get(self, request):
+        total_users = UserEnrolled.objects.count()
+        active_users = UserEnrolled.objects.filter(status='active').count()
+        inactive_users = UserEnrolled.objects.filter(status='inactive').count()
+        return Response({
+            'total_users':total_users,
+            'active_users': active_users,
+            'inactive_users': inactive_users
+        }, status=status.HTTP_200_OK)
+        
+        
+from .serializers import EmailSerializer
+
+class UserImageView(APIView):
+    def post(self, request):
+        serializer = EmailSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            try:
+                user = UserEnrolled.objects.get(email=email)
+                # Check if the user has a picture and if the picture file exists
+                if user.picture and os.path.exists(user.picture.path):
+                    image_url = user.picture.url
+                    return Response({"image_url": image_url}, status=status.HTTP_200_OK)
+                else:
+                    # Find any image in the user's folder if the picture field is empty or file does not exist
+                    user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.get_folder_name()))
+                    if os.path.exists(user_folder):
+                        user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+                        if user_images:
+                            random_image = random.choice(user_images)
+                            image_url = os.path.join(settings.MEDIA_URL, 'facial_data', user.get_folder_name(), random_image)
+                            return Response({"image_url": image_url}, status=status.HTTP_200_OK)
+                    return Response({"error": "No image found"}, status=status.HTTP_404_NOT_FOUND)
+            except UserEnrolled.DoesNotExist:
+                return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

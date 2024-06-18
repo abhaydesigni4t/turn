@@ -434,6 +434,7 @@
         <table>
             <tr>
                 <th>Asset ID</th>
+                <th>Picture</th>
                 <th>Asset Name</th>
                 <th>Tag ID</th>
                 <th>Footage</th>
@@ -443,6 +444,13 @@
             {% for asset in assets %}
             <tr>
                 <td>{{ asset.asset_id }}</td>
+                <td>
+                    {% if asset.picture %}
+                    <img src="{{ asset.picture.url }}" alt="Asset" style="width: 50px; height: auto;">
+                    {% else %}
+                    <img src="{% static 'app1/images/site.jpg' %}" alt="Asset" style="width: 50px; height: auto;">
+                    {% endif %}
+                </td>
                 <td><a class="link" href="{% url 'asset_details' asset_id=asset.asset_id %}">{{ asset.asset_name }}</a></td>
                 <td>{{ asset.tag_id }}</td>
                 <td>

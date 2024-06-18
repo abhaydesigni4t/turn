@@ -15,7 +15,7 @@
             padding-top: 10vh;
             background: #f4f4f4;
             box-sizing: border-box;
-            height: 550px;
+            height: 800px;
         }
 
 
@@ -359,17 +359,29 @@
     
     <div class="content">
         <div class="form-container">
-            <h2>Add Site</h2>
+            <h2>{% if form.instance.pk %}Update Site{% else %}Add Site{% endif %}</h2>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
-
-                <label for="{{ form.name.id_for_label }}">Asset Name:</label>
+                <label for="{{ form.picture.id_for_label }}">Picture:</label>
+                {% if form.instance.pk and form.instance.picture %}
+                    <div>
+                        <img src="{{ form.instance.picture.url }}" style="width: 100px; height: auto;">
+                        <br>
+                    </div>
+                {% endif %}
+                <input type="file" name="picture" id="{{ form.picture.id_for_label }}">
+                <br>
+                <label for="{{ form.name.id_for_label }}">Site Name:</label>
                 {{ form.name }}
+                <br>
+                <label for="{{ form.location.id_for_label }}">Location:</label>
+                {{ form.location }}
                 <br>
                 <button type="submit">Save</button>
             </form>
         </div>
     </div>
+    
     <footer>
         <p>Email: info@assuretech.com</p>
         <p>Phone: +1 (123) 456-7890</p>

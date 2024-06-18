@@ -14,7 +14,7 @@ class LoginForm(forms.Form):
 class YourModelForm(forms.ModelForm):
     class Meta:
         model = UserEnrolled
-        exclude = ['password']
+        exclude = ['password','picture']
         widgets = {
             'orientation': forms.ClearableFileInput(attrs={'accept': 'application/pdf, application/msword, image/jpeg, image/jpg'}),
         }
@@ -48,12 +48,12 @@ class AssetForm(forms.ModelForm):
 
     class Meta:
         model = Asset
-        fields = [ 'asset_id','asset_name', 'tag_id', 'footage' , 'description', 'asset_category','status','location']
+        fields = [ 'asset_id','picture','asset_name', 'tag_id', 'footage' , 'description', 'asset_category','status','location']
       
 class SiteForm(forms.ModelForm):
     class Meta:
         model = Site
-        fields = ['name']
+        fields = ['picture','name','location']
 
     def clean_name(self):
         name = self.cleaned_data['name']
