@@ -1,10 +1,7 @@
 from rest_framework import serializers
 from .models import UserEnrolled,Asset,Site,Notification,Upload_File,Turnstile_S,Orientation,PreShift,ToolBox
 
-class UserEnrolledSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserEnrolled
-        fields = '__all__'
+
 
 class ActionStatusSerializer(serializers.Serializer):
     status = serializers.IntegerField()
@@ -21,7 +18,7 @@ class AssetSerializer(serializers.ModelSerializer):
 class UserEnrolledSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserEnrolled
-        fields = ['name','company_name','mycompany_id','tag_id','job_location','orientation','status']
+        fields = ['name','company_name','job_role','mycompany_id','tag_id','job_location','orientation','status']
        
 class UserEnrolledSerializer1(serializers.ModelSerializer):
     class Meta:

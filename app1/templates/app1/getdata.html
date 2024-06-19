@@ -666,7 +666,13 @@
                         Company Name
                     </div>
                 </th>
-            
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('job_role', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Job
+                    </div>
+                </th>
+    
     
                 <th>
                     <div>
@@ -712,6 +718,7 @@
                 </td>
                 <td>{{i.name}}</td>
                 <td>{{i.company_name}}</td>
+                <td>{{i.job_role}}</td>
                 <td>{{i.mycompany_id}}</td>
                 <td>{{i.tag_id}}</td>
                 <td>{{i.job_location}}</td>

@@ -155,7 +155,7 @@ class create_data(CreateView):
 
 class UpdateData(UpdateView):
     model = UserEnrolled 
-    fields = ['name','company_name','mycompany_id','tag_id','job_location','orientation','facial_data','my_comply','status','email']     
+    fields = ['name','company_name','job_role','mycompany_id','tag_id','job_location','orientation','facial_data','my_comply','status','email']     
     template_name = 'app1/add_user.html'
     success_url = reverse_lazy('get_all')
 
