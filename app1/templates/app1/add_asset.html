@@ -390,7 +390,9 @@
 
     <div class="content">
         <div class="form-container">
+            
             <h2>Add New Asset</h2>
+
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 {{ form.as_p }}

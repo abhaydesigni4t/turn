@@ -1286,6 +1286,7 @@ class SiteDeleteByNameAPIView(APIView):
             try:
                 site = Site.objects.get(name__iexact=name)
                 site.delete()
+                
                 return Response({'message': 'Site deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
             except Site.DoesNotExist:
                 return Response({'error': 'Site not found'}, status=status.HTTP_404_NOT_FOUND)
