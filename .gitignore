@@ -1,0 +1,5 @@
+# Ignore the database file in this app directory
+#db.sqlite3
+
+# Ignore the media folder in this app directory
+media/
