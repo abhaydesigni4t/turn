@@ -1332,3 +1332,7 @@ class UserImageView(APIView):
             except UserEnrolled.DoesNotExist:
                 return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+def test(request):
+    return render(request,'app1/aaa.html')
