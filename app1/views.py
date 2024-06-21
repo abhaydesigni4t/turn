@@ -1334,5 +1334,3 @@ class UserImageView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     
-def test(request):
-    return render(request,'app1/aaa.html')
