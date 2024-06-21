@@ -59,10 +59,7 @@ class UserEnrolled(models.Model):
     picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
     name = models.CharField(max_length=255)
     company_name = models.CharField(max_length=100)
-    job_role = models.CharField(max_length=100, choices=[
-        ('role1', 'Role 1'),
-        ('role2', 'Role 2'),
-    ])
+    job_role = models.CharField(max_length=100)
     mycompany_id = models.CharField(max_length=10)
     tag_id = models.CharField(max_length=50)
     job_location = models.CharField(max_length=100)

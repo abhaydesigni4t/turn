@@ -628,7 +628,9 @@
                 <label for="filterCompanyName">Company Name:</label>
                 <input type="text" id="filterCompanyName" name="filterCompanyName">
 
-        
+                <label for="filterJobRole">Job Role:</label>
+                <input type="text" id="filterJobRole" name="filterJobRole">
+
                 <label for="filterJobLocation">Job Location:</label>
                 <input type="text" id="filterJobLocation" name="filterJobLocation">
         
@@ -669,10 +671,9 @@
                 <th>
                     <div>
                         <span class="filter-icon" onclick="toggleFilter('job_role', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
-                        Job
+                        Job Role
                     </div>
                 </th>
-    
     
                 <th>
                     <div>
@@ -819,7 +820,7 @@
         function filterTable() {
             var filterName = document.getElementById('filterName').value.toUpperCase();
             var filterCompanyName = document.getElementById('filterCompanyName').value.toUpperCase();
-            
+            var filterJobRole = document.getElementById('filterJobRole').value.toUpperCase();
             var filterJobLocation = document.getElementById('filterJobLocation').value.toUpperCase();
             var filterStatus = document.getElementById('filterStatus').value.toLowerCase();
         
@@ -832,9 +833,9 @@
         
                 var name = cols[3].textContent || cols[3].innerText;
                 var companyName = cols[4].textContent || cols[4].innerText;
-                
-                var jobLocation = cols[7].textContent || cols[7].innerText;
-                var status = cols[12].textContent || cols[12].innerText;
+                var jobRole = cols[5].textContent || cols[5].innerText;
+                var jobLocation = cols[8].textContent || cols[8].innerText;
+                var status = cols[13].textContent || cols[13].innerText;
         
                 var showRow = true;
                 if (filterName && name.toUpperCase().indexOf(filterName) === -1) {
@@ -843,7 +844,9 @@
                 if (filterCompanyName && companyName.toUpperCase().indexOf(filterCompanyName) === -1) {
                     showRow = false;
                 }
-                
+                if (filterJobRole && jobRole.toUpperCase().indexOf(filterJobRole) === -1) {
+                    showRow = false;
+                }
                 if (filterJobLocation && jobLocation.toUpperCase().indexOf(filterJobLocation) === -1) {
                     showRow = false;
                 }
@@ -857,7 +860,7 @@
         
         document.getElementById('filterName').addEventListener('input', filterTable);
         document.getElementById('filterCompanyName').addEventListener('input', filterTable);
-        
+        document.getElementById('filterJobRole').addEventListener('input', filterTable);
         document.getElementById('filterJobLocation').addEventListener('input', filterTable);
         document.getElementById('filterStatus').addEventListener('change', filterTable);
         
