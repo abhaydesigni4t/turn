@@ -1336,3 +1336,6 @@ class UserImageView(APIView):
     
 def test(request):
     return render(request,'app1/zzz.html')
+
+def test1(request):
+    return render(request,'app1/rrr.html')
