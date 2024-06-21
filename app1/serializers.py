@@ -123,7 +123,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = UserEnrolled
-        fields = ['name', 'company_name', 'job_role', 'mycompany_id', 'job_location', 'email']
+        fields = ['name', 'company_name', 'job_role', 'mycompany_id', 'job_location', 'email','status']
        
     def create(self, validated_data):
         if 'status' not in validated_data:
