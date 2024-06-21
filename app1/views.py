@@ -126,7 +126,7 @@ class get_data(ListView):
     model = UserEnrolled
     template_name = 'app1/getdata.html'
     context_object_name = 'data'
-    paginate_by = 20  
+    paginate_by = 10  
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -834,14 +834,11 @@ class UserProfileCreateAPIView(APIView):
             serializer = UserProfileSerializer(existing_user, data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.data, status=status.HTTP_200_OK)  # Status 200 for successful update
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({'message': 'Email not found. Please sign up.'}, status=status.HTTP_404_NOT_FOUND)
-
-
-
-
+        
 def show_facial_data_images(request, user_id):
     user = get_object_or_404(UserEnrolled, pk=user_id)
     user_folder = os.path.join('media', 'facial_data', user.get_folder_name())
