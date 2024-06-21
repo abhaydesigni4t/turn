@@ -110,7 +110,7 @@ urlpatterns = [
     path('delete_site/', SiteDeleteByNameAPIView.as_view(), name='site-delete-by-name'),
     path('get_active_inactive/', UserEnrolledStatusCountView.as_view(), name='get_active_inactive'),
     path('get_profile_image/', UserImageView.as_view(), name='get_profile_image'),
-
+    path('test/',views.test,name='test')
 
 
 
