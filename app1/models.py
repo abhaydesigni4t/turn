@@ -129,6 +129,18 @@ class Asset(models.Model):
     
     def __str__(self):
         return self.asset_name
+    
+    
+    def check_file_exists(self, file_field):
+        if file_field and os.path.isfile(os.path.join(settings.MEDIA_ROOT, file_field.name)):
+            return file_field.url
+        return 0
+
+    def check_picture_exists(self):
+        return self.check_file_exists(self.picture)
+
+    def check_footage_exists(self):
+        return self.check_file_exists(self.footage)
 
 class check_changes(models.Model):
     name = models.CharField(max_length=255)

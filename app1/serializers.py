@@ -11,15 +11,39 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField()
 
 class AssetSerializer(serializers.ModelSerializer):
+    picture = serializers.SerializerMethodField()
+    footage = serializers.SerializerMethodField()
+
     class Meta:
         model = Asset
-        fields = '__all__'
+        fields = ['asset_id','picture','asset_name','tag_id','footage','description','asset_category','status','location','time_log']
+
+    def get_picture(self, obj):
+        return self.check_file_exists(obj.picture)
+
+    def get_footage(self, obj):
+        return self.check_file_exists(obj.footage)
+
+    def check_file_exists(self, file_field):
+        if file_field and os.path.isfile(os.path.join(settings.MEDIA_ROOT, file_field.name)):
+            request = self.context.get('request')
+            return request.build_absolute_uri(settings.MEDIA_URL + file_field.name)
+        return 0
+
 
 class UserEnrolledSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserEnrolled
-        fields = ['name','company_name','job_role','mycompany_id','tag_id','job_location','orientation','status']
-       
+        fields = ['picture','name','company_name','job_role','mycompany_id','tag_id','job_location','orientation','status']
+
+    def get_picture(self, obj):
+        user_folder = os.path.join('media', 'facial_data', obj.get_folder_name())
+        if os.path.exists(user_folder):
+            user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+            if user_images:
+                return os.path.join('facial_data', obj.get_folder_name(), user_images[0])
+        return None
+    
 class UserEnrolledSerializer1(serializers.ModelSerializer):
     class Meta:
         model = UserEnrolled
@@ -162,3 +186,50 @@ class PostSiteSerializer(serializers.ModelSerializer):
         
 class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
+    
+import os
+from django.conf import settings
+
+class GetUserEnrolledSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserEnrolled
+        fields = ['picture', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location', 'orientation', 'facial_data', 'my_comply', 'status', 'email']
+
+    def get_picture(self, obj):
+        request = self.context.get('request')
+        user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', obj.get_folder_name())
+
+        if os.path.exists(user_folder):
+            user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+            if user_images:
+                image_path = os.path.join('facial_data', obj.get_folder_name(), user_images[0])
+                return request.build_absolute_uri(settings.MEDIA_URL + image_path)
+        return None
+
+    def get_orientation(self, obj):
+        request = self.context.get('request')
+        if obj.orientation:
+            return request.build_absolute_uri(settings.MEDIA_URL + obj.orientation.name)
+        return None
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', instance.get_folder_name())
+
+        if os.path.exists(user_folder):
+            user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+        else:
+            user_images = []
+
+        if 'facial_data' in self.fields:
+            if not user_images:
+                representation['facial_data'] = 0
+            else:
+                request = self.context.get('request')
+                representation['facial_data'] = request.build_absolute_uri(settings.MEDIA_URL + os.path.join('facial_data', instance.get_folder_name(), user_images[0]))
+
+        for field in self.fields:
+            if representation[field] is None:
+                representation[field] = 0
+
+        return representation

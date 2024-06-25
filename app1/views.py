@@ -333,6 +333,9 @@ class AssetListAPIView(generics.ListAPIView):
     queryset = Asset.objects.all()
     serializer_class = AssetSerializer
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 class UserEnrollListCreateAPIView(generics.ListCreateAPIView):
     queryset = UserEnrolled.objects.all()
     serializer_class = UserEnrolledSerializer
@@ -340,6 +343,20 @@ class UserEnrollListCreateAPIView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(orientation=self.request.data.get('orientation'))
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        for user in queryset:
+            user_folder = os.path.join('media', 'facial_data', user.get_folder_name())
+            if os.path.exists(user_folder):
+                user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+                if user_images:
+                    user.picture = os.path.join('facial_data', user.get_folder_name(), user_images[0])
+                else:
+                    user.picture = None
+            else:
+                user.picture = None
+        return queryset
+    
 class UserEnrollDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserEnrolled.objects.all()
     serializer_class = UserEnrolledSerializer
@@ -1331,3 +1348,23 @@ class UserImageView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     
+
+from .serializers import GetUserEnrolledSerializer
+
+@api_view(['POST'])
+def get_user_data(request):
+    email = request.data.get('email')
+    if not email:
+        return Response({"error": "Email parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = UserEnrolled.objects.get(email=email)
+
+        # Debugging: Print user folder path
+        user_folder = os.path.join('media', 'facial_data', user.get_folder_name())
+        print(f"User folder path: {user_folder}")
+
+        serializer = GetUserEnrolledSerializer(user, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except UserEnrolled.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
