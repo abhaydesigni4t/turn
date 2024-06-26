@@ -30,8 +30,8 @@ import matplotlib.pyplot as plt
 import os
 from django.conf import settings
 from django.db.models.functions import Lower
-
-
+from django.middleware.csrf import get_token
+from django.views.decorators.csrf import csrf_protect
 
 def user_login(request):            #extra
     if request.method == 'POST':
@@ -164,21 +164,23 @@ class TaskDeleteView(DeleteView):
     template_name = 'app1/data_confirm_delete.html'
     success_url = reverse_lazy('get_all')
 
+@csrf_protect
 def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user:
-                login(request, user)    
-                return redirect('sites')
-            else:             
-                form.add_error(None, 'Invalid username or password')
+            email = form.cleaned_data.get('email')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, email=email, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, 'Login successful.')
+                return redirect('sites')  # Change 'home' to your desired redirect page
+            else:
+                messages.error(request, 'Invalid email or password.')
     else:
         form = LoginForm()
-    return render(request, 'app1/app2_login.html', {'form': form})
+    return render(request, 'app1/signup.html', {'form': form, 'is_login_page': True})
 
 def app2_logout(request):
     logout(request)
@@ -721,36 +723,6 @@ class UpdateOrientationAPIView(APIView):
             return Response({'error': 'Email and orientation file are required.'}, status=status.HTTP_400_BAD_REQUEST)
         
 
-class LoginAPIApp(APIView):
-    def post(self, request, format=None):
-        serializer = LoginSerializerApp(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            user = UserEnrolled.objects.get(email=email)
-            name = user.name
-            return Response({'message': 'Login successful', 'name': name}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-import re
-
-@api_view(['POST'])
-def signup_api_app(request):
-    email = request.data.get('email', '')
-    
-    # Check if the email already exists
-    if UserEnrolled.objects.filter(email=email).exists():
-        return Response({"error": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Email format validation using regex
-    pat = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
-    if not re.match(pat, email):
-        return Response({"error": "Invalid Email format"}, status=status.HTTP_400_BAD_REQUEST)
-
-    serializer = signup_app(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response({"message": "Registration Successful"}, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 def site_document(request):
     return render(request,'app1/site_documents.html')
@@ -1313,13 +1285,23 @@ class UserEnrolledStatusCountView(APIView):
         total_users = UserEnrolled.objects.count()
         active_users = UserEnrolled.objects.filter(status='active').count()
         inactive_users = UserEnrolled.objects.filter(status='inactive').count()
-        return Response({
-            'total_users':total_users,
-            'active_users': active_users,
-            'inactive_users': inactive_users
-        }, status=status.HTTP_200_OK)
         
+        sites = Site.objects.all()
+        site_data = []
         
+        for site in sites:
+            site_dict = {
+                'picture': request.build_absolute_uri(site.picture.url) if site.picture else None,
+                'name': site.name,
+                'location': site.location,
+                'total_users': total_users,
+                'active_users': active_users,
+                'inactive_users': inactive_users,
+            }
+            site_data.append(site_dict)
+        
+        return Response(site_data, status=status.HTTP_200_OK)
+    
 from .serializers import EmailSerializer
 
 class UserImageView(APIView):
@@ -1368,3 +1350,81 @@ def get_user_data(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except UserEnrolled.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    
+from django.contrib.auth import login
+from .forms import SignUpForm
+
+@csrf_protect
+def signup_view(request):
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Signup successful. Please log in.')
+            return redirect('signup')  # Redirect to login page after successful signup
+    else:
+        form = SignUpForm()
+    return render(request, 'app1/signup.html', {'form': form, 'is_signup_page': True})
+
+
+
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
+from .serializers import UserEnrolledSerializer11, UserEnrolledUpdateSerializer11
+from .models import UserEnrolled
+
+class signup_api_app(APIView):
+    def post(self, request, format=None):
+        serializer = UserEnrolledSerializer11(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            user_data = serializer.data
+            return Response(user_data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LoginAPIApp(APIView):
+    def post(self, request, format=None):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        user = UserEnrolled.objects.filter(email=email).first()
+        if user and user.check_password(password):
+            # Return a success message and the user's name
+            return Response({'message': 'Login successful', 'name': user.name}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class UserEnrolledUpdateView11(APIView):
+    def put(self, request, format=None):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = UserEnrolled.objects.get(email=email)
+        except UserEnrolled.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = UserEnrolledUpdateSerializer11(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetUserByEmailView(APIView):
+    def post(self, request, format=None):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = UserEnrolled.objects.get(email=email)
+        except UserEnrolled.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = UserEnrolledSerializer11(user)
+        user_data = serializer.data
+        user_data.pop('password', None)  # Remove the password from the serialized data
+        return Response(user_data, status=status.HTTP_200_OK)

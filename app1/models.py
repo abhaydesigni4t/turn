@@ -8,44 +8,39 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, username, email=None, password=None, **extra_fields):
-        if not username:
-            raise ValueError("The username field must be set")
-
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("The email field must be set")
         email = self.normalize_email(email)
-        user = self.model(username=username, email=email, **extra_fields)
-        user.set_password(password)  # Hash the password
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email=None, password=None, **extra_fields):
+    def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
-
         if extra_fields.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True.")
         if extra_fields.get("is_superuser") is not True:
             raise ValueError("Superuser must have is_superuser=True.")
-
-        return self.create_user(username, email, password, **extra_fields)
+        return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(max_length=50, unique=True)
-    email = models.EmailField(unique=True)  # Add the email field
+    email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
 
     objects = CustomUserManager()
 
-    USERNAME_FIELD = "username"
-    REQUIRED_FIELDS = ["email", "first_name", "last_name"]
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name']
 
     def __str__(self):
-        return self.username
-
+        return self.email
+    
 from django.core.validators import FileExtensionValidator
 
 import os
@@ -66,10 +61,10 @@ class UserEnrolled(models.Model):
     orientation = models.FileField(upload_to='attachments/', blank=True,null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
     facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
     my_comply = models.ImageField(upload_to='compliance_images/',blank=True, null=True)
-    status = models.CharField(max_length=10, choices=[
+    status = models.CharField(max_length=100, choices=[
         ('active', 'Active'),
         ('inactive', 'Inactive'),
-    ])
+    ], default='active')
     email = models.EmailField()
     password = models.CharField(max_length=50)
 
@@ -80,7 +75,11 @@ class UserEnrolled(models.Model):
     def get_folder_name(self):
         return self.name
     
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
     
+    def check_password(self, raw_password):
+        return check_password(raw_password, self.password)
         
 from django.db.models.signals import post_delete
 from django.dispatch import receiver

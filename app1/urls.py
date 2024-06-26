@@ -1,13 +1,14 @@
 from django.urls import path
 from . import views
-from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,UserComplyAPIView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView
+from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,UserComplyAPIView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView
 from django.conf import settings
 from django.conf.urls.static import static
 
 
 
 urlpatterns = [
-    path('',views.login_view,name='login'),
+    path('login/',views.login_view,name='login'),
+    path('',views.signup_view,name='signup'),
     #path('login1/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
     path("check/", views.check_data, name="check"),
@@ -78,7 +79,7 @@ urlpatterns = [
     path('post_orientation/', UpdateOrientationAPIView.as_view(), name='post_orientation'),
     path('face_api/', FacialDataApi.as_view(), name='face_api'),
     path('loginapi/', LoginAPIApp.as_view(), name='loginapi'), 
-    path('signupapi/', views.signup_api_app, name='signupapi'),
+    path('signupapi/',signup_api_app.as_view(), name='signupapi'),
     path('site_docu/',views.site_document,name='site_docu'),
     path('preshift/',views.preshift,name='preshift'),
     path('add_preshift/', views.add_preshift, name='add_preshift'),
@@ -111,7 +112,8 @@ urlpatterns = [
     path('get_active_inactive/', UserEnrolledStatusCountView.as_view(), name='get_active_inactive'),
     path('get_profile_image/', UserImageView.as_view(), name='get_profile_image'),
     path('get_user_data/',views.get_user_data,name='get_user_data'),
-
+    path('update_signup/', UserEnrolledUpdateView11.as_view(), name='update-user'),
+    path('get_signup/', GetUserByEmailView.as_view(), name='get-user-by-email'),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -60,9 +60,17 @@ class ExitSerializer(serializers.ModelSerializer):
         exclude = ['id']
 
 class SiteSerializer(serializers.ModelSerializer):
+    picture = serializers.SerializerMethodField()
+
     class Meta:
         model = Site
-        fields = ['picture','name','location']
+        fields = ['picture', 'name', 'location', 'total_users', 'active_users', 'inactive_users']
+
+    def get_picture(self, obj):
+        request = self.context.get('request')
+        if obj.picture:
+            return request.build_absolute_uri(obj.picture.url)
+        return None
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -233,3 +241,37 @@ class GetUserEnrolledSerializer(serializers.ModelSerializer):
                 representation[field] = 0
 
         return representation
+    
+    
+    
+from django.contrib.auth.hashers import make_password
+from rest_framework import serializers
+from .models import UserEnrolled
+
+class UserEnrolledSerializer11(serializers.ModelSerializer):
+    class Meta:
+        model = UserEnrolled
+        fields = ('name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location', 'status', 'email', 'password')
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        # Hash the password before saving
+        validated_data['password'] = make_password(validated_data['password'])
+        return UserEnrolled.objects.create(**validated_data)
+
+
+class UserEnrolledUpdateSerializer11(serializers.ModelSerializer):
+    class Meta:
+        model = UserEnrolled
+        fields = ('name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location', 'status', 'email', 'password')
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def update(self, instance, validated_data):
+        # Hash the password if it's being updated
+        password = validated_data.pop('password', None)
+        if password:
+            instance.set_password(password)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance

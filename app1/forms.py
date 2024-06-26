@@ -2,14 +2,25 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser,Upload_data,Asset,Site,company,UserEnrolled,Notification,timeschedule,Turnstile_S,Orientation,PreShift,ToolBox
 from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate
 
-
-CustomUser = get_user_model()
-
+User = get_user_model()
 
 class LoginForm(forms.Form):
-    username = forms.CharField()
-    password = forms.CharField(widget=forms.PasswordInput)
+    email = forms.EmailField(max_length=254, required=True)
+    password = forms.CharField(widget=forms.PasswordInput, required=True)
+
+    def clean(self):
+        cleaned_data = super(LoginForm, self).clean()
+        email = cleaned_data.get('email')
+        password = cleaned_data.get('password')
+
+        if email and password:
+            from django.contrib.auth import authenticate
+            user = authenticate(email=email, password=password)
+            if not user:
+                raise forms.ValidationError("Invalid email or password.")
+        return cleaned_data
 
 class YourModelForm(forms.ModelForm):
     class Meta:
@@ -101,5 +112,40 @@ class SingleFileUploadForm(forms.Form):
     facial_data = forms.ImageField(required=True)
 
     
+from django.contrib.auth.forms import UserCreationForm
+from .models import CustomUser
 
+class SignUpForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
 
+    class Meta:
+        model = UserEnrolled
+        fields = ('name', 'email', 'password', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location')
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if UserEnrolled.objects.filter(email=email).exists():
+            raise forms.ValidationError("A user with this email already exists.")
+        if CustomUser.objects.filter(email=email).exists():
+            raise forms.ValidationError("A user with this email already exists in the authentication system.")
+        return email
+
+    def save(self, commit=True):
+        user_enrolled = super(SignUpForm, self).save(commit=False)
+        password = self.cleaned_data["password"]
+
+        user_enrolled.status = 'active' 
+        
+        if commit:
+            # Save the UserEnrolled instance
+            user_enrolled.save()
+
+            # Create a corresponding CustomUser instance
+            custom_user = CustomUser(
+                email=user_enrolled.email,
+                first_name=user_enrolled.name
+            )
+            custom_user.set_password(password)
+            custom_user.save()
+
+        return user_enrolled
