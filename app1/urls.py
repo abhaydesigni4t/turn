@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,UserComplyAPIView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView
+from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,UserComplyAPIView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView,SignUpView,AdminLoginView
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -114,7 +114,12 @@ urlpatterns = [
     path('get_user_data/',views.get_user_data,name='get_user_data'),
     path('update_signup/', UserEnrolledUpdateView11.as_view(), name='update-user'),
     path('get_signup/', GetUserByEmailView.as_view(), name='get-user-by-email'),
-
+    path('signup_admin/', SignUpView.as_view(), name='signup_admin'),
+    path('login_admin/', AdminLoginView.as_view(), name='login_admin'),
+    
+    
+    
+    
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

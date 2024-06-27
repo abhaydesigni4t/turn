@@ -16,7 +16,7 @@ class AssetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Asset
-        fields = ['asset_id','picture','asset_name','tag_id','footage','description','asset_category','status','location','time_log']
+        fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'footage', 'description', 'asset_category', 'status', 'location', 'time_log']
 
     def get_picture(self, obj):
         return self.check_file_exists(obj.picture)
@@ -28,7 +28,7 @@ class AssetSerializer(serializers.ModelSerializer):
         if file_field and os.path.isfile(os.path.join(settings.MEDIA_ROOT, file_field.name)):
             request = self.context.get('request')
             return request.build_absolute_uri(settings.MEDIA_URL + file_field.name)
-        return 0
+        return None
 
 
 class UserEnrolledSerializer(serializers.ModelSerializer):
@@ -129,6 +129,7 @@ class signup_app(serializers.ModelSerializer):
         model = UserEnrolled
         fields = ['name', 'email', 'password']
 
+
 class PreShiftSerializer(serializers.ModelSerializer):
     class Meta:
         model = PreShift
@@ -199,6 +200,11 @@ import os
 from django.conf import settings
 
 class GetUserEnrolledSerializer(serializers.ModelSerializer):
+    picture = serializers.SerializerMethodField()
+    orientation = serializers.SerializerMethodField()
+    facial_data = serializers.SerializerMethodField()
+    my_comply = serializers.SerializerMethodField()
+
     class Meta:
         model = UserEnrolled
         fields = ['picture', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location', 'orientation', 'facial_data', 'my_comply', 'status', 'email']
@@ -216,32 +222,33 @@ class GetUserEnrolledSerializer(serializers.ModelSerializer):
 
     def get_orientation(self, obj):
         request = self.context.get('request')
-        if obj.orientation:
+        if obj.orientation and os.path.isfile(os.path.join(settings.MEDIA_ROOT, obj.orientation.name)):
             return request.build_absolute_uri(settings.MEDIA_URL + obj.orientation.name)
+        return None
+
+    def get_facial_data(self, obj):
+        request = self.context.get('request')
+        user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', obj.get_folder_name())
+
+        if os.path.exists(user_folder):
+            user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+            if user_images:
+                image_path = os.path.join('facial_data', obj.get_folder_name(), user_images[0])
+                return request.build_absolute_uri(settings.MEDIA_URL + image_path)
+        return None
+
+    def get_my_comply(self, obj):
+        request = self.context.get('request')
+        if obj.my_comply and os.path.isfile(os.path.join(settings.MEDIA_ROOT, obj.my_comply.name)):
+            return request.build_absolute_uri(settings.MEDIA_URL + obj.my_comply.name)
         return None
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', instance.get_folder_name())
-
-        if os.path.exists(user_folder):
-            user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
-        else:
-            user_images = []
-
-        if 'facial_data' in self.fields:
-            if not user_images:
-                representation['facial_data'] = 0
-            else:
-                request = self.context.get('request')
-                representation['facial_data'] = request.build_absolute_uri(settings.MEDIA_URL + os.path.join('facial_data', instance.get_folder_name(), user_images[0]))
-
-        for field in self.fields:
+        for field in ['picture', 'orientation', 'facial_data', 'my_comply']:
             if representation[field] is None:
-                representation[field] = 0
-
+                representation[field] = None
         return representation
-    
     
     
 from django.contrib.auth.hashers import make_password
@@ -275,3 +282,40 @@ class UserEnrolledUpdateSerializer11(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+
+
+class SignUpSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserEnrolled
+        fields = ['name', 'email', 'password']
+    
+    def validate_password(self, value: str) -> str:
+        """Hash the password before saving."""
+        return make_password(value)
+
+
+
+from django.contrib.auth.hashers import check_password
+
+
+class AdminLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        email = data.get("email")
+        password = data.get("password")
+        
+        if email and password:
+            try:
+                user = UserEnrolled.objects.get(email=email)
+            except UserEnrolled.DoesNotExist:
+                raise serializers.ValidationError("Invalid email or password.")
+            
+            if not check_password(password, user.password):
+                raise serializers.ValidationError("Invalid email or password.")
+        else:
+            raise serializers.ValidationError("Both email and password are required.")
+        
+        data["user"] = user
+        return data

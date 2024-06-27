@@ -331,12 +331,10 @@ class AssetCreateAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class AssetListAPIView(generics.ListAPIView):
     queryset = Asset.objects.all()
     serializer_class = AssetSerializer
-
-    def get_serializer_context(self):
-        return {'request': self.request}
 
 class UserEnrollListCreateAPIView(generics.ListCreateAPIView):
     queryset = UserEnrolled.objects.all()
@@ -1428,3 +1426,24 @@ class GetUserByEmailView(APIView):
         user_data = serializer.data
         user_data.pop('password', None)  # Remove the password from the serialized data
         return Response(user_data, status=status.HTTP_200_OK)
+
+from .serializers import SignUpSerializer
+
+class SignUpView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = SignUpSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "created successfully."}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+from .serializers import AdminLoginSerializer
+
+class AdminLoginView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = AdminLoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data["user"]
+            return Response({"message": "Login successful.", "user_name": user.name}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
