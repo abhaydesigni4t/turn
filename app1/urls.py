@@ -116,6 +116,7 @@ urlpatterns = [
     path('get_signup/', GetUserByEmailView.as_view(), name='get-user-by-email'),
     path('signup_admin/', SignUpView.as_view(), name='signup_admin'),
     path('login_admin/', AdminLoginView.as_view(), name='login_admin'),
+    path('test50/',views.test50,name='test50'),
     
     
     

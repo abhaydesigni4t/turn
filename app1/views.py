@@ -1447,3 +1447,9 @@ class AdminLoginView(APIView):
             user = serializer.validated_data["user"]
             return Response({"message": "Login successful.", "user_name": user.name}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+def test50(request):
+    return render(request,'app1/test50.html')
+
+
