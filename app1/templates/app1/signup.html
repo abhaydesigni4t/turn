@@ -204,6 +204,7 @@
         <!-- Signup Form -->
         <form id="signup-form" action="{% url 'signup' %}" method="post" class="auth-form">
             {% csrf_token %}
+            
             <label for="signup-name">Name</label>
             <input type="text" id="signup-name" name="name" placeholder="Name" required>
             
@@ -233,11 +234,15 @@
             {% if form.errors %}
                 <div class="error-message">
                     {% for field, error in form.errors.items %}
-                        {{ error }}
+                        <p>{{ error }}</p>
                     {% endfor %}
                 </div>
             {% endif %}
         </form>
+        
+        
+        
+        
         
     </div>
 </div>

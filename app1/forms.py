@@ -149,3 +149,21 @@ class SignUpForm(forms.ModelForm):
             custom_user.save()
 
         return user_enrolled
+
+
+class SignUpForm_new(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
+
+    class Meta:
+        model = get_user_model()
+        fields = ('name', 'email', 'password','company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location')
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if get_user_model().objects.filter(email=email).exists():
+            raise forms.ValidationError("A user with this email already exists.")
+        return email
+
+class LoginForm_new(forms.Form):
+    email = forms.EmailField(max_length=254, required=True)
+    password = forms.CharField(widget=forms.PasswordInput, required=True)

@@ -7,6 +7,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings
 
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -28,7 +29,12 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=30)
+    name = models.CharField(max_length=255)  # Add this field
+    company_name = models.CharField(max_length=100)  # Add this field
+    job_role = models.CharField(max_length=100)  # Add this field
+    mycompany_id = models.CharField(max_length=10)  # Add this field
+    tag_id = models.CharField(max_length=50)  # Add this field
+    job_location = models.CharField(max_length=100)  # Add this field
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
@@ -36,10 +42,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name']
+    REQUIRED_FIELDS = ['name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location']
 
     def __str__(self):
         return self.email
+    
     
 from django.core.validators import FileExtensionValidator
 

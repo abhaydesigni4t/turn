@@ -1373,24 +1373,6 @@ from rest_framework import status
 from .serializers import UserEnrolledSerializer11, UserEnrolledUpdateSerializer11
 from .models import UserEnrolled
 
-class signup_api_app(APIView):
-    def post(self, request, format=None):
-        serializer = UserEnrolledSerializer11(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            user_data = serializer.data
-            return Response(user_data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class LoginAPIApp(APIView):
-    def post(self, request, format=None):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        user = UserEnrolled.objects.filter(email=email).first()
-        if user and user.check_password(password):
-            # Return a success message and the user's name
-            return Response({'message': 'Login successful', 'name': user.name}, status=status.HTTP_200_OK)
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class UserEnrolledUpdateView11(APIView):
@@ -1453,3 +1435,88 @@ def test50(request):
     return render(request,'app1/test50.html')
 
 
+from .serializers import SignupSerializer_new,LoginSerializer_new,UserSerializer_new
+
+class SignupView_new(APIView):
+    def post(self, request, format=None):
+        serializer = SignupSerializer_new(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LoginView_new(APIView):
+    def post(self, request, format=None):
+        serializer = LoginSerializer_new(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
+
+from .forms import SignUpForm_new
+
+@csrf_protect
+def signup_view_new(request):
+    if request.method == 'POST':
+        form = SignUpForm_new(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+            messages.success(request, 'Signup successful. Please log in.')
+            return redirect('login')  # Redirect to login page after successful signup
+    else:
+        form = SignUpForm_new()
+    return render(request, 'app1/signup.html', {'form': form, 'is_signup_page': True})
+
+
+from .forms import LoginForm_new
+
+@csrf_protect
+def login_view_new(request):
+    if request.method == 'POST':
+        form = LoginForm_new(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data.get('email')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, email=email, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, 'Login successful.')
+                return redirect('sites')  # Redirect to the admin site or a specific page after login
+            else:
+                messages.error(request, 'Invalid email or password.')
+    else:
+        form = LoginForm_new()
+    return render(request, 'app1/signup.html', {'form': form, 'is_login_page': True})
+
+import re
+
+@api_view(['POST'])
+def signup_api_app(request):
+    email = request.data.get('email', '')
+    
+    # Check if the email already exists
+    if UserEnrolled.objects.filter(email=email).exists():
+        return Response({"error": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Email format validation using regex
+    pat = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
+    if not re.match(pat, email):
+        return Response({"error": "Invalid Email format"}, status=status.HTTP_400_BAD_REQUEST)
+
+    serializer = signup_app(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message": "Registration Successful"}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoginAPIApp(APIView):
+    def post(self, request, format=None):
+        serializer = LoginSerializerApp(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            user = UserEnrolled.objects.get(email=email)
+            name = user.name
+            return Response({'message': 'Login successful', 'name': name}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

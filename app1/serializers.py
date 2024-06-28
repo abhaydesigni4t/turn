@@ -107,27 +107,6 @@ class OrientationSerializer(serializers.ModelSerializer):
         model = Orientation
         fields = '__all__'
     
-class LoginSerializerApp(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField()
-
-    def validate(self, data):
-        email = data.get('email')
-        password = data.get('password')
-
-        if not email or not password:
-            raise serializers.ValidationError("Both email and password are required.")
-
-        user = UserEnrolled.objects.filter(email=email, password=password).first()
-        if not user:
-            raise serializers.ValidationError("Invalid email or password.")
-
-        return data
-
-class signup_app(serializers.ModelSerializer):
-    class Meta:
-        model = UserEnrolled
-        fields = ['name', 'email', 'password']
 
 
 class PreShiftSerializer(serializers.ModelSerializer):
@@ -318,4 +297,58 @@ class AdminLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Both email and password are required.")
         
         data["user"] = user
+        return data
+
+from django.contrib.auth import get_user_model
+
+class SignupSerializer_new(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ('email', 'password', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location')
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = get_user_model().objects.create_user(**validated_data)
+        return user
+
+class LoginSerializer_new(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(style={'input_type': 'password'})
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+        user = get_user_model().objects.filter(email=email).first()
+        if user and user.check_password(password):
+            data['user'] = user
+            return data
+        raise serializers.ValidationError('Incorrect email or password.')
+
+class UserSerializer_new(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ('email', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location')
+        
+        
+class signup_app(serializers.ModelSerializer):
+    class Meta:
+        model = UserEnrolled
+        fields = ['name', 'email', 'password']
+        
+        
+class LoginSerializerApp(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+
+        if not email or not password:
+            raise serializers.ValidationError("Both email and password are required.")
+
+        user = UserEnrolled.objects.filter(email=email, password=password).first()
+        if not user:
+            raise serializers.ValidationError("Invalid email or password.")
+
         return data

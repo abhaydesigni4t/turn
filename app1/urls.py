@@ -1,15 +1,17 @@
 from django.urls import path
 from . import views
-from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,UserComplyAPIView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView,SignUpView,AdminLoginView
+from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,UserComplyAPIView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView,SignUpView,AdminLoginView,SignupView_new,LoginView_new,signup_view_new,login_view_new
 from django.conf import settings
 from django.conf.urls.static import static
 
 
 
 urlpatterns = [
-    path('login/',views.login_view,name='login'),
-    path('',views.signup_view,name='signup'),
+    #path('login/',views.login_view,name='login'),
+    #path('',views.signup_view,name='signup'),
     #path('login1/', views.user_login, name='login'),
+    path('',views.signup_view_new,name='signup'),
+    path('login/',views.login_view_new,name='login'),
     path('logout/', views.user_logout, name='logout'),
     path("check/", views.check_data, name="check"),
     path('api_user_enro/', UserEnrolledListCreateView.as_view(), name='user_enro1'),
@@ -79,7 +81,7 @@ urlpatterns = [
     path('post_orientation/', UpdateOrientationAPIView.as_view(), name='post_orientation'),
     path('face_api/', FacialDataApi.as_view(), name='face_api'),
     path('loginapi/', LoginAPIApp.as_view(), name='loginapi'), 
-    path('signupapi/',signup_api_app.as_view(), name='signupapi'),
+    path('signupapi/',views.signup_api_app, name='signupapi'),
     path('site_docu/',views.site_document,name='site_docu'),
     path('preshift/',views.preshift,name='preshift'),
     path('add_preshift/', views.add_preshift, name='add_preshift'),
@@ -117,8 +119,8 @@ urlpatterns = [
     path('signup_admin/', SignUpView.as_view(), name='signup_admin'),
     path('login_admin/', AdminLoginView.as_view(), name='login_admin'),
     path('test50/',views.test50,name='test50'),
-    
-    
+    path('signup_new/', SignupView_new.as_view(), name='signup_new'),
+    path('login_new/', LoginView_new.as_view(), name='login_new'),
     
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
