@@ -10,76 +10,57 @@ ansar@mail.com
 
 ***********************************
 
-modify this api i want to post picture also "class UserProfileCreateAPIView(APIView):
-def post(self, request):
-    email = request.data.get('email')
-    if not email:
-        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    existing_user = UserEnrolled.objects.filter(email=email).first()
-    if existing_user:
-        serializer = UserProfileSerializer(existing_user, data=request.data)
+this is model "class Asset(models.Model):
+asset_id = models.IntegerField(unique=True)
+picture = models.ImageField(upload_to='asset_pictures/', blank=True, null=True)
+asset_name = models.CharField(max_length=255)
+tag_id = models.IntegerField(unique=True)
+footage = models.ImageField(upload_to='assets_footage/', blank=True, null=True,verbose_name= 'Footage')
+description = models.CharField(max_length=500)
+asset_category = models.CharField(max_length=50)
+STATUS_CHOICES = [
+    ('active', 'Active'),
+    ('inactive', 'Inactive'),
+]
+status = models.CharField(max_length=50, choices=STATUS_CHOICES)
+location = models.CharField(max_length=100)
+time_log = models.DateTimeField(auto_now=True)
+
+def __str__(self):
+    return self.asset_name
+
+
+def check_file_exists(self, file_field):
+    if file_field and os.path.isfile(os.path.join(settings.MEDIA_ROOT, file_field.name)):
+        return file_field.url
+    return 0
+
+def check_picture_exists(self):
+    return self.check_file_exists(self.picture)
+
+def check_footage_exists(self):
+    return self.check_file_exists(self.footage)" this is post api "class AssetCreateAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = AssetSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)  # Status 200 for successful update
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    else:
-        return Response({'message': 'Email not found. Please sign up.'}, status=status.HTTP_404_NOT_FOUND)" this is model "def user_image_upload_path(instance, filename):
-        base_filename, file_extension = os.path.splitext(filename)
-        return f'facial_data/{instance.get_folder_name()}/{base_filename}{file_extension}'
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)" this is serializer "class AssetSerializer(serializers.ModelSerializer):
+        picture = serializers.SerializerMethodField()
+        footage = serializers.SerializerMethodField()
     
-    class UserEnrolled(models.Model):
-        sr = models.AutoField(primary_key=True,unique=True)
-        picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
-        name = models.CharField(max_length=255)
-        company_name = models.CharField(max_length=100)
-        job_role = models.CharField(max_length=100)
-        mycompany_id = models.CharField(max_length=10)
-        tag_id = models.CharField(max_length=50)
-        job_location = models.CharField(max_length=100)
-        orientation = models.FileField(upload_to='attachments/', blank=True,null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
-        facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
-        my_comply = models.ImageField(upload_to='compliance_images/',blank=True, null=True)
-        status = models.CharField(max_length=100, choices=[
-            ('active', 'Active'),
-            ('inactive', 'Inactive'),
-        ], default='active')
-        email = models.EmailField()
-        password = models.CharField(max_length=50)" this is signal "@receiver(post_save, sender=UserEnrolled)
-        def create_user_folder(sender, instance, created, **kwargs):
-            if created:
-                user_folder = os.path.join('media', 'facial_data', instance.get_folder_name())
-                os.makedirs(user_folder, exist_ok=True)
-        
-                # Get all images in the user's facial_data folder
-                user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
-        
-                if user_images:
-                    # Check if the current picture is deleted or not in the user's folder
-                    if instance.picture and os.path.basename(instance.picture.name) not in user_images:
-                        # Find the next available image and set it as the user's picture
-                        for image in user_images:
-                            if image != os.path.basename(instance.picture.name):
-                                instance.picture = os.path.join('facial_data', instance.get_folder_name(), image)
-                                instance.save()
-                                break
-                    elif not instance.picture:
-                        # If there's no current picture, set the first image as the user's picture
-                        first_image = user_images[0]
-                        instance.picture = os.path.join('facial_data', instance.get_folder_name(), first_image)
-                        instance.save()
-                else:
-                    instance.picture = None  # No image found, set picture to None or another default value
-                    instance.save()" and this is serializer "class UserProfileSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Asset
+            fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'footage', 'description', 'asset_category', 'status', 'location']
     
-                    class Meta:
-                        model = UserEnrolled
-                        fields = ['name', 'company_name', 'job_role', 'mycompany_id', 'job_location', 'email']
-                       
-                    def create(self, validated_data):
-                        validated_data['status'] = 'active'
-                        return UserEnrolled.objects.create(**validated_data)
-                
-                    def update(self, instance, validated_data):
-                        validated_data['status'] = validated_data.get('status', 'active')
-                        return super().update(instance, validated_data)"
+        def get_picture(self, obj):
+            return self.check_file_exists(obj.picture)
+    
+        def get_footage(self, obj):
+            return self.check_file_exists(obj.footage)
+    
+        def check_file_exists(self, file_field):
+            if file_field and os.path.isfile(os.path.join(settings.MEDIA_ROOT, file_field.name)):
+                request = self.context.get('request')
+                return request.build_absolute_uri(settings.MEDIA_URL + file_field.name)
+            return None" now problem is when i post picture and footage then it not save in related folder and in response it return null both 

@@ -139,8 +139,8 @@ class Asset(models.Model):
     
     def check_file_exists(self, file_field):
         if file_field and os.path.isfile(os.path.join(settings.MEDIA_ROOT, file_field.name)):
-            return file_field.url
-        return 0
+            return True
+        return False
 
     def check_picture_exists(self):
         return self.check_file_exists(self.picture)

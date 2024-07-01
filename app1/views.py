@@ -126,7 +126,7 @@ class get_data(ListView):
     model = UserEnrolled
     template_name = 'app1/getdata.html'
     context_object_name = 'data'
-    paginate_by = 10  
+    paginate_by = 3  
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -324,13 +324,16 @@ class LoginAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class AssetCreateAPIView(APIView):
+    parser_classes = (MultiPartParser, FormParser,)
+    
     def post(self, request, *args, **kwargs):
         serializer = AssetSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    
+from .serializers import UserProfileSerializer
 
 class AssetListAPIView(generics.ListAPIView):
     queryset = Asset.objects.all()
@@ -341,12 +344,27 @@ class UserEnrollListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = UserEnrolledSerializer
 
     def perform_create(self, serializer):
-        serializer.save(orientation=self.request.data.get('orientation'))
+        user_instance = serializer.save()
+        # Ensure the user folder exists
+        user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', user_instance.get_folder_name())
+        os.makedirs(user_folder, exist_ok=True)
+        
+        # Move the picture to the correct folder
+        if self.request.FILES.get('picture'):
+            picture_file = self.request.FILES.get('picture')
+            picture_path = os.path.join(user_folder, picture_file.name)
+            
+            with open(picture_path, 'wb+') as destination:
+                for chunk in picture_file.chunks():
+                    destination.write(chunk)
+            
+            user_instance.picture = picture_path
+            user_instance.save()
 
     def get_queryset(self):
         queryset = super().get_queryset()
         for user in queryset:
-            user_folder = os.path.join('media', 'facial_data', user.get_folder_name())
+            user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', user.get_folder_name())
             if os.path.exists(user_folder):
                 user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
                 if user_images:
@@ -356,6 +374,13 @@ class UserEnrollListCreateAPIView(generics.ListCreateAPIView):
             else:
                 user.picture = None
         return queryset
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
+    
+    
     
 class UserEnrollDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserEnrolled.objects.all()
