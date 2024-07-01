@@ -135,7 +135,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = UserEnrolled
-        fields = ['name', 'company_name', 'job_role', 'mycompany_id', 'job_location', 'email']
+        fields = ['picture','name', 'company_name', 'job_role', 'mycompany_id', 'job_location', 'email']
        
     def create(self, validated_data):
         validated_data['status'] = 'active'

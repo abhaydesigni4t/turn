@@ -1,35 +1,85 @@
-this is model for signup "class CustomUser(AbstractBaseUser, PermissionsMixin):
-email = models.EmailField(unique=True)
-name = models.CharField(max_length=255)  # Add this field
-company_name = models.CharField(max_length=100)  # Add this field
-job_role = models.CharField(max_length=100)  # Add this field
-mycompany_id = models.CharField(max_length=10)  # Add this field
-tag_id = models.CharField(max_length=50)  # Add this field
-job_location = models.CharField(max_length=100)  # Add this field
-is_active = models.BooleanField(default=True)
-is_staff = models.BooleanField(default=False)
-date_joined = models.DateTimeField(default=timezone.now)
+Ansar Ahmed
+ULTIMATE DESIGN TECHNOLOGY LLP
+EE
+1173919287
+1173919287
+Mumbai
+ansar@mail.com
 
-objects = CustomUserManager()
 
-USERNAME_FIELD = 'email'
-REQUIRED_FIELDS = ['name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location']
 
-def __str__(self):
-    return self.email
-" this is signup api "class SignupView_new(APIView):
-def post(self, request, format=None):
-    serializer = SignupSerializer_new(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-" this is signup serializer "class SignupSerializer_new(serializers.ModelSerializer):
-class Meta:
-    model = get_user_model()
-    fields = ('email', 'password', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location')
-    extra_kwargs = {'password': {'write_only': True}}
+***********************************
 
-def create(self, validated_data):
-    user = get_user_model().objects.create_user(**validated_data)
-    return user" now i want get api using drf and get specific data using parameter email and don't get password i want correct api
+modify this api i want to post picture also "class UserProfileCreateAPIView(APIView):
+def post(self, request):
+    email = request.data.get('email')
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    existing_user = UserEnrolled.objects.filter(email=email).first()
+    if existing_user:
+        serializer = UserProfileSerializer(existing_user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)  # Status 200 for successful update
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'message': 'Email not found. Please sign up.'}, status=status.HTTP_404_NOT_FOUND)" this is model "def user_image_upload_path(instance, filename):
+        base_filename, file_extension = os.path.splitext(filename)
+        return f'facial_data/{instance.get_folder_name()}/{base_filename}{file_extension}'
+    
+    class UserEnrolled(models.Model):
+        sr = models.AutoField(primary_key=True,unique=True)
+        picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
+        name = models.CharField(max_length=255)
+        company_name = models.CharField(max_length=100)
+        job_role = models.CharField(max_length=100)
+        mycompany_id = models.CharField(max_length=10)
+        tag_id = models.CharField(max_length=50)
+        job_location = models.CharField(max_length=100)
+        orientation = models.FileField(upload_to='attachments/', blank=True,null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
+        facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
+        my_comply = models.ImageField(upload_to='compliance_images/',blank=True, null=True)
+        status = models.CharField(max_length=100, choices=[
+            ('active', 'Active'),
+            ('inactive', 'Inactive'),
+        ], default='active')
+        email = models.EmailField()
+        password = models.CharField(max_length=50)" this is signal "@receiver(post_save, sender=UserEnrolled)
+        def create_user_folder(sender, instance, created, **kwargs):
+            if created:
+                user_folder = os.path.join('media', 'facial_data', instance.get_folder_name())
+                os.makedirs(user_folder, exist_ok=True)
+        
+                # Get all images in the user's facial_data folder
+                user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+        
+                if user_images:
+                    # Check if the current picture is deleted or not in the user's folder
+                    if instance.picture and os.path.basename(instance.picture.name) not in user_images:
+                        # Find the next available image and set it as the user's picture
+                        for image in user_images:
+                            if image != os.path.basename(instance.picture.name):
+                                instance.picture = os.path.join('facial_data', instance.get_folder_name(), image)
+                                instance.save()
+                                break
+                    elif not instance.picture:
+                        # If there's no current picture, set the first image as the user's picture
+                        first_image = user_images[0]
+                        instance.picture = os.path.join('facial_data', instance.get_folder_name(), first_image)
+                        instance.save()
+                else:
+                    instance.picture = None  # No image found, set picture to None or another default value
+                    instance.save()" and this is serializer "class UserProfileSerializer(serializers.ModelSerializer):
+    
+                    class Meta:
+                        model = UserEnrolled
+                        fields = ['name', 'company_name', 'job_role', 'mycompany_id', 'job_location', 'email']
+                       
+                    def create(self, validated_data):
+                        validated_data['status'] = 'active'
+                        return UserEnrolled.objects.create(**validated_data)
+                
+                    def update(self, instance, validated_data):
+                        validated_data['status'] = validated_data.get('status', 'active')
+                        return super().update(instance, validated_data)"

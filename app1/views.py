@@ -813,18 +813,36 @@ from rest_framework import status
 class UserProfileCreateAPIView(APIView):
     def post(self, request):
         email = request.data.get('email')
+        picture = request.data.get('picture')  # Get the picture data from request
+        
         if not email:
             return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
         
         existing_user = UserEnrolled.objects.filter(email=email).first()
-        if existing_user:
-            serializer = UserProfileSerializer(existing_user, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)  # Status 200 for successful update
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({'message': 'Email not found. Please sign up.'}, status=status.HTTP_404_NOT_FOUND)
+        if not existing_user:
+            return Response({'error': 'User not found. Please sign up.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = UserProfileSerializer(existing_user, data=request.data)
+        if serializer.is_valid():
+            if picture:
+                # Save picture to user's folder
+                user_folder = os.path.join('media', 'facial_data', existing_user.get_folder_name())
+                os.makedirs(user_folder, exist_ok=True)
+                
+                picture_name = picture.name
+                picture_path = os.path.join(user_folder, picture_name)
+                
+                with open(picture_path, 'wb') as f:
+                    for chunk in picture.chunks():
+                        f.write(chunk)
+                
+                serializer.validated_data['picture'] = os.path.relpath(picture_path, 'media')
+            
+            serializer.save()
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)  # Status 200 for successful update
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 def show_facial_data_images(request, user_id):
     user = get_object_or_404(UserEnrolled, pk=user_id)
