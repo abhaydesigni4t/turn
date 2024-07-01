@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,UserComplyAPIView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView,SignUpView,AdminLoginView,SignupView_new,LoginView_new,signup_view_new,login_view_new
+from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,UserComplyAPIView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView,SignUpView,AdminLoginView,SignupView_new,LoginView_new,signup_view_new,login_view_new,GetSignupUserRetrieveAPIView,SignupUserUpdateView
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -121,7 +121,8 @@ urlpatterns = [
     path('test50/',views.test50,name='test50'),
     path('signup_new/', SignupView_new.as_view(), name='signup_new'),
     path('login_new/', LoginView_new.as_view(), name='login_new'),
-    
+    path('get_signup/<str:email>/', GetSignupUserRetrieveAPIView.as_view(), name='get_signup'),
+    path('update_signup/<str:email>/', SignupUserUpdateView.as_view(), name='get_signup'),
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

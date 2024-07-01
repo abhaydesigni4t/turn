@@ -1,0 +1,35 @@
+this is model for signup "class CustomUser(AbstractBaseUser, PermissionsMixin):
+email = models.EmailField(unique=True)
+name = models.CharField(max_length=255)  # Add this field
+company_name = models.CharField(max_length=100)  # Add this field
+job_role = models.CharField(max_length=100)  # Add this field
+mycompany_id = models.CharField(max_length=10)  # Add this field
+tag_id = models.CharField(max_length=50)  # Add this field
+job_location = models.CharField(max_length=100)  # Add this field
+is_active = models.BooleanField(default=True)
+is_staff = models.BooleanField(default=False)
+date_joined = models.DateTimeField(default=timezone.now)
+
+objects = CustomUserManager()
+
+USERNAME_FIELD = 'email'
+REQUIRED_FIELDS = ['name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location']
+
+def __str__(self):
+    return self.email
+" this is signup api "class SignupView_new(APIView):
+def post(self, request, format=None):
+    serializer = SignupSerializer_new(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+" this is signup serializer "class SignupSerializer_new(serializers.ModelSerializer):
+class Meta:
+    model = get_user_model()
+    fields = ('email', 'password', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location')
+    extra_kwargs = {'password': {'write_only': True}}
+
+def create(self, validated_data):
+    user = get_user_model().objects.create_user(**validated_data)
+    return user" now i want get api using drf and get specific data using parameter email and don't get password i want correct api

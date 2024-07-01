@@ -1520,3 +1520,33 @@ class LoginAPIApp(APIView):
             name = user.name
             return Response({'message': 'Login successful', 'name': name}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+from django.shortcuts import get_object_or_404
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .serializers import SignupUserRetrieveSerializer,SignupUserUpdateSerializer
+from django.contrib.auth import get_user_model
+
+class GetSignupUserRetrieveAPIView(APIView):
+    def get(self, request, email):
+        try:
+            user = get_object_or_404(get_user_model(), email=email)
+            serializer = SignupUserRetrieveSerializer(user)
+            return Response(serializer.data)
+        except get_user_model().DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    
+class SignupUserUpdateView(APIView):
+    def patch(self, request, email):
+        try:
+            user = get_object_or_404(get_user_model(), email=email)
+            serializer = SignupUserUpdateSerializer(instance=user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except get_user_model().DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)

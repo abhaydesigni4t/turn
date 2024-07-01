@@ -310,6 +310,8 @@ class SignupSerializer_new(serializers.ModelSerializer):
     def create(self, validated_data):
         user = get_user_model().objects.create_user(**validated_data)
         return user
+    
+    
 
 class LoginSerializer_new(serializers.Serializer):
     email = serializers.EmailField()
@@ -352,3 +354,20 @@ class LoginSerializerApp(serializers.Serializer):
             raise serializers.ValidationError("Invalid email or password.")
 
         return data
+    
+
+
+from django.contrib.auth import get_user_model
+from rest_framework import serializers
+
+class SignupUserRetrieveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ('email', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location')
+        # Note: You may want to exclude or include other fields as necessary
+        
+class SignupUserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ('email', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location')
+        read_only_fields = ('date_joined',)  # Prevent updating these fields
