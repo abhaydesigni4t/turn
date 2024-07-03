@@ -12,11 +12,13 @@ class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError("The email field must be set")
-        email = self.normalize_email(email)
+        email = self.normalize_email(email).lower()  # Convert to lowercase
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
+
+    # ... rest of the code remains the same
 
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
@@ -121,7 +123,7 @@ class Asset(models.Model):
     asset_id = models.IntegerField(unique=True)
     picture = models.ImageField(upload_to='asset_pictures/', blank=True, null=True)
     asset_name = models.CharField(max_length=255)
-    tag_id = models.IntegerField(unique=True)
+    tag_id = models.IntegerField(max_length=100)
     footage = models.ImageField(upload_to='assets_footage/', blank=True, null=True,verbose_name= 'Footage')
     description = models.CharField(max_length=500)
     asset_category = models.CharField(max_length=50)
@@ -129,8 +131,8 @@ class Asset(models.Model):
         ('active', 'Active'),
         ('inactive', 'Inactive'),
     ]
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES)
-    location = models.CharField(max_length=100)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES,default='inactive')
+    location = models.CharField(max_length=100,blank=True, null=True)
     time_log = models.DateTimeField(auto_now=True)
     
     def __str__(self):

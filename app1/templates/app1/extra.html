@@ -10,57 +10,8 @@ ansar@mail.com
 
 ***********************************
 
-this is model "class Asset(models.Model):
-asset_id = models.IntegerField(unique=True)
-picture = models.ImageField(upload_to='asset_pictures/', blank=True, null=True)
-asset_name = models.CharField(max_length=255)
-tag_id = models.IntegerField(unique=True)
-footage = models.ImageField(upload_to='assets_footage/', blank=True, null=True,verbose_name= 'Footage')
-description = models.CharField(max_length=500)
-asset_category = models.CharField(max_length=50)
-STATUS_CHOICES = [
-    ('active', 'Active'),
-    ('inactive', 'Inactive'),
-]
-status = models.CharField(max_length=50, choices=STATUS_CHOICES)
-location = models.CharField(max_length=100)
-time_log = models.DateTimeField(auto_now=True)
-
-def __str__(self):
-    return self.asset_name
 
 
-def check_file_exists(self, file_field):
-    if file_field and os.path.isfile(os.path.join(settings.MEDIA_ROOT, file_field.name)):
-        return file_field.url
-    return 0
 
-def check_picture_exists(self):
-    return self.check_file_exists(self.picture)
 
-def check_footage_exists(self):
-    return self.check_file_exists(self.footage)" this is post api "class AssetCreateAPIView(APIView):
-    def post(self, request, *args, **kwargs):
-        serializer = AssetSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)" this is serializer "class AssetSerializer(serializers.ModelSerializer):
-        picture = serializers.SerializerMethodField()
-        footage = serializers.SerializerMethodField()
-    
-        class Meta:
-            model = Asset
-            fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'footage', 'description', 'asset_category', 'status', 'location']
-    
-        def get_picture(self, obj):
-            return self.check_file_exists(obj.picture)
-    
-        def get_footage(self, obj):
-            return self.check_file_exists(obj.footage)
-    
-        def check_file_exists(self, file_field):
-            if file_field and os.path.isfile(os.path.join(settings.MEDIA_ROOT, file_field.name)):
-                request = self.context.get('request')
-                return request.build_absolute_uri(settings.MEDIA_URL + file_field.name)
-            return None" now problem is when i post picture and footage then it not save in related folder and in response it return null both 
+

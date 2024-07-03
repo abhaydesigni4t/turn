@@ -126,7 +126,30 @@ class get_data(ListView):
     model = UserEnrolled
     template_name = 'app1/getdata.html'
     context_object_name = 'data'
-    paginate_by = 3  
+    paginate_by = 3
+    
+    def get_queryset(self):
+        queryset = UserEnrolled.objects.all()
+
+        # Filter based on query parameters
+        filter_name = self.request.GET.get('filterName')
+        filter_company_name = self.request.GET.get('filterCompanyName')
+        filter_job_role = self.request.GET.get('filterJobRole')
+        filter_job_location = self.request.GET.get('filterJobLocation')
+        filter_status = self.request.GET.get('filterStatus')
+
+        if filter_name:
+            queryset = queryset.filter(name__icontains=filter_name)
+        if filter_company_name:
+            queryset = queryset.filter(company_name__icontains=filter_company_name)
+        if filter_job_role:
+            queryset = queryset.filter(job_role__icontains=filter_job_role)
+        if filter_job_location:
+            queryset = queryset.filter(job_location__icontains=filter_job_location)
+        if filter_status:
+            queryset = queryset.filter(status__iexact=filter_status)
+
+        return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -138,10 +161,7 @@ class get_data(ListView):
         context['page_obj'] = page_obj
         context['paginator'] = paginator
         return context
-
-    def get_queryset(self):
-        return UserEnrolled.objects.all()
-
+    
 class create_data(CreateView):
     model = UserEnrolled 
     form_class = YourModelForm
@@ -395,6 +415,8 @@ class UserEnrollDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 class ExitListCreateAPIView(generics.ListCreateAPIView):
     queryset = Asset.objects.all()
     serializer_class = ExitSerializer
+    
+    
 
 class ExitDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Asset.objects.all()
@@ -581,7 +603,7 @@ def notification_view(request):
 
 def orientation_task(request):
     if request.method == 'POST':
-        form = OrientationForm(request.POST, request.FILES)  
+        form = OrientationForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             return render(request, 'app1/success1.html')
@@ -589,18 +611,20 @@ def orientation_task(request):
             print(form.errors)
     else:
         form = OrientationForm()
+
     latest_orientation = Orientation.objects.last()
- 
     return render(request, 'app1/orientation.html', {'form': form, 'latest_orientation': latest_orientation})
 
 def view_attachment(request, attachment_id):
     # Retrieve the attachment by ID (or any other identifier you use)
-    orientation = Orientation.objects.get(id=attachment_id)
-    # Assuming you have a 'attachments' field in your Orientation model
-    attachment = orientation.attachments
-    # Serve the attachment file
-    response = HttpResponse(attachment, content_type='application/pdf')
-    return response
+    orientation = get_object_or_404(Orientation, id=attachment_id)
+    
+    if orientation.attachments:
+        # Serve the attachment file
+        response = HttpResponse(orientation.attachments, content_type='application/pdf')
+        return response
+    else:
+        return HttpResponse("Attachment not found", status=404)
 
 class ChangeAssetStatus(APIView):
     def put(self, request, asset_id):
@@ -1519,13 +1543,14 @@ def login_view_new(request):
     if request.method == 'POST':
         form = LoginForm_new(request.POST)
         if form.is_valid():
-            email = form.cleaned_data.get('email')
+            # Convert email to lowercase before authentication
+            email = form.cleaned_data.get('email').lower()
             password = form.cleaned_data.get('password')
             user = authenticate(request, email=email, password=password)
             if user is not None:
                 login(request, user)
                 messages.success(request, 'Login successful.')
-                return redirect('sites')  # Redirect to the admin site or a specific page after login
+                return redirect('sites')
             else:
                 messages.error(request, 'Invalid email or password.')
     else:

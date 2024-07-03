@@ -5,6 +5,9 @@ User = get_user_model()
 
 class EmailBackend(BaseBackend):
     def authenticate(self, request, email=None, password=None, **kwargs):
+        if email is None:
+            return None
+        email = email.lower()  # Convert to lowercase
         try:
             user = User.objects.get(email=email)
             if user.check_password(password):

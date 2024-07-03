@@ -621,25 +621,27 @@
     <div id="table-container">
 
         <div class="filter-container">
-            <form id="filterForm">
+            <form id="filterForm" method="get" action="{% url 'get_all' %}">
                 <label for="filterName">Name:</label>
-                <input type="text" id="filterName" name="filterName">
+                <input type="text" id="filterName" name="filterName" value="{{ request.GET.filterName|default_if_none:'' }}">
         
                 <label for="filterCompanyName">Company Name:</label>
-                <input type="text" id="filterCompanyName" name="filterCompanyName">
-
+                <input type="text" id="filterCompanyName" name="filterCompanyName" value="{{ request.GET.filterCompanyName|default_if_none:'' }}">
+        
                 <label for="filterJobRole">Job Role:</label>
-                <input type="text" id="filterJobRole" name="filterJobRole">
-
+                <input type="text" id="filterJobRole" name="filterJobRole" value="{{ request.GET.filterJobRole|default_if_none:'' }}">
+        
                 <label for="filterJobLocation">Job Location:</label>
-                <input type="text" id="filterJobLocation" name="filterJobLocation">
+                <input type="text" id="filterJobLocation" name="filterJobLocation" value="{{ request.GET.filterJobLocation|default_if_none:'' }}">
         
                 <label for="filterStatus">Status:</label>
                 <select id="filterStatus" name="filterStatus">
                     <option value="">All</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="active" {% if request.GET.filterStatus == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if request.GET.filterStatus == 'inactive' %}selected{% endif %}>Inactive</option>
                 </select>
+        
+                <button type="submit">Apply Filters</button>
             </form>
             <a class="add-user-button" href="{% url 'create' %}">Add</a>
         </div>
@@ -792,16 +794,17 @@
         <div class="pagination">
             <span class="step-links">
                 {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
                 {% endif %}
-
+        
                 <span class="current">
                     Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
                 </span>
-
+        
                 {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">next</a>
-
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ paginator.num_pages }}">last &raquo;</a>
                 {% endif %}
             </span>
         </div>
@@ -815,55 +818,9 @@
         </div>
     </footer>
 
-    <script>
 
-        function filterTable() {
-            var filterName = document.getElementById('filterName').value.toUpperCase();
-            var filterCompanyName = document.getElementById('filterCompanyName').value.toUpperCase();
-            var filterJobRole = document.getElementById('filterJobRole').value.toUpperCase();
-            var filterJobLocation = document.getElementById('filterJobLocation').value.toUpperCase();
-            var filterStatus = document.getElementById('filterStatus').value.toLowerCase();
-        
-            var table = document.getElementById('customers');
-            var rows = table.getElementsByTagName('tr');
-        
-            for (var i = 1; i < rows.length; i++) {
-                var row = rows[i];
-                var cols = row.getElementsByTagName('td');
-        
-                var name = cols[3].textContent || cols[3].innerText;
-                var companyName = cols[4].textContent || cols[4].innerText;
-                var jobRole = cols[5].textContent || cols[5].innerText;
-                var jobLocation = cols[8].textContent || cols[8].innerText;
-                var status = cols[13].textContent || cols[13].innerText;
-        
-                var showRow = true;
-                if (filterName && name.toUpperCase().indexOf(filterName) === -1) {
-                    showRow = false;
-                }
-                if (filterCompanyName && companyName.toUpperCase().indexOf(filterCompanyName) === -1) {
-                    showRow = false;
-                }
-                if (filterJobRole && jobRole.toUpperCase().indexOf(filterJobRole) === -1) {
-                    showRow = false;
-                }
-                if (filterJobLocation && jobLocation.toUpperCase().indexOf(filterJobLocation) === -1) {
-                    showRow = false;
-                }
-                if (filterStatus && status.toLowerCase() !== filterStatus) {
-                    showRow = false;
-                }
-        
-                row.style.display = showRow ? '' : 'none';
-            }
-        }
-        
-        document.getElementById('filterName').addEventListener('input', filterTable);
-        document.getElementById('filterCompanyName').addEventListener('input', filterTable);
-        document.getElementById('filterJobRole').addEventListener('input', filterTable);
-        document.getElementById('filterJobLocation').addEventListener('input', filterTable);
-        document.getElementById('filterStatus').addEventListener('change', filterTable);
-        
+   
+    <script>
 
     function toggleFilter(column, currentSortBy) {
     let newSortBy = column;

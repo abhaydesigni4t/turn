@@ -16,7 +16,7 @@ class AssetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Asset
-        fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'footage', 'description', 'asset_category', 'status', 'location']
+        fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'footage', 'description', 'asset_category', 'status']
 
     def validate(self, data):
         # Perform any additional validation here if needed
@@ -52,10 +52,21 @@ class UserEnrolledSerializer2(serializers.ModelSerializer):
         model = UserEnrolled
         fields = ['mycompany_id','orientation']
 
+from django.utils import timezone
+
 class ExitSerializer(serializers.ModelSerializer):
+    time_log = serializers.DateTimeField(default=timezone.now)
+
     class Meta:
         model = Asset
-        exclude = ['id']
+        fields = ['asset_id', 'asset_name', 'tag_id', 'footage', 'location', 'time_log']
+        read_only_fields = ['time_log']  # Ensuring time_log is read-only as it is automatically set
+        
+    def create(self, validated_data):
+        # Convert empty string to null for location
+        if validated_data.get('location') == '':
+            validated_data['location'] = None
+        return super().create(validated_data)
 
 class SiteSerializer(serializers.ModelSerializer):
     picture = serializers.SerializerMethodField()
@@ -310,13 +321,12 @@ class SignupSerializer_new(serializers.ModelSerializer):
         return user
     
     
-
 class LoginSerializer_new(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(style={'input_type': 'password'})
 
     def validate(self, data):
-        email = data.get('email')
+        email = data.get('email').lower()  # Convert to lowercase
         password = data.get('password')
         user = get_user_model().objects.filter(email=email).first()
         if user and user.check_password(password):

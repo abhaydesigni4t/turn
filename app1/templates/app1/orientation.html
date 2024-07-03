@@ -204,7 +204,7 @@ body {
     .attachment-container a {
             display: inline-block; 
             text-align: center;
-            margin-left: 565px;
+            margin-left: 555px;
             background-color: #071390;
             color: white;
             padding: 6px;
@@ -376,7 +376,13 @@ body {
    
     <div class="attachment-container">
         {% if latest_orientation %}
-            <a href="{% url 'view_attachment' attachment_id=latest_orientation.id %}" target="_blank">View Attachment</a>
+            {% if latest_orientation.attachments %}
+                <a href="{% url 'view_attachment' attachment_id=latest_orientation.id %}" target="_blank">View Attachment</a>
+            {% else %}
+                <a href="#">No attachment found</a>
+            {% endif %}
+        {% else %}
+            <a href="#">No attachment found</a>
         {% endif %}
     </div>
 
