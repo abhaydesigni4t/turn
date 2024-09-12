@@ -3055,3 +3055,69 @@ def google_login_view(request):
             return JsonResponse({'error': str(e)}, status=400)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+import requests
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
+from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from app1.models import UserEnrolled  # Assuming 'app1' is the app where 'UserEnrolled' is defined
+from django.contrib.auth.hashers import make_password  # Import password hash utilities
+from django.utils.crypto import get_random_string  # To generate random passwords
+
+
+class GoogleLoginAPIView(APIView):
+    def post(self, request):
+        token = request.data.get("token")
+        
+        if not token:
+            return Response({"error": "Token is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Verify the token with Google
+            idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), settings.GOOGLE_CLIENT_ID)
+            
+            if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+                return Response({"error": "Wrong issuer."}, status=status.HTTP_403_FORBIDDEN)
+
+            # Get user's Google information
+            email = idinfo['email']
+            name = idinfo.get('name', '')
+            picture_url = idinfo.get('picture', '')
+
+            # Check if the user already exists in UserEnrolled
+            try:
+                user_enrolled = UserEnrolled.objects.get(email=email)
+            except UserEnrolled.DoesNotExist:
+                # Generate a random password for the user
+                random_password = get_random_string(length=12)  # Generate a 12-character random password
+                hashed_password = make_password(random_password)  # Hash the password
+                
+                # Create a new UserEnrolled if it doesn't exist
+                user_enrolled = UserEnrolled.objects.create(
+                    name=name,
+                    email=email,
+                    picture=picture_url,  # Save the profile picture URL or handle it accordingly
+                    company_name="N/A",  # Default value, replace or fetch as needed
+                    job_role="N/A",  # Default value
+                    job_location="N/A",  # Default value
+                    password=hashed_password  # Store the hashed password
+                )
+                user_enrolled.save()
+
+            # Return user info, or any other tokens/authentication info you use
+            return Response({
+                "message": "User logged in successfully",
+                "user": {
+                    "id": user_enrolled.sr,
+                    "email": user_enrolled.email,
+                    "name": user_enrolled.name,
+                }
+            }, status=status.HTTP_200_OK)
+
+        except ValueError:
+            # Invalid token
+            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
