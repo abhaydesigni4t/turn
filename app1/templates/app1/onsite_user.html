@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onsite User</title>
+    {% load static %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Verdana', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f4;
+            box-sizing: border-box;
+        }
+    
+        header {
+            background-color: #ffffff;
+            color: black;
+            text-align: center;
+            padding: 15px 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    
+        .nav a {
+            color: black;
+            padding: 10px 10px;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 5px;
+            transition: color 0.3s ease;
+        }
+    
+        .nav {
+            display: flex;
+            align-items: center;
+            margin-right: auto; /* Adjusted to auto to prevent fixed margin on right */
+            margin-left:315px;
+        }
+    
+        .dropdown {
+            display: inline-block;
+            position: relative;
+            text-align: center;
+        }
+    
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f1f1f1;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            max-width: calc(100vw - 40px);
+            overflow: auto;
+        }
+    
+        .dropdown-content a {
+            color: black;
+            padding: 8px 10px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+    
+        .nav .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #ffffff;
+            min-width: 20px;
+            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+    
+        .nav .dropdown-content a {
+            float: none;
+            color: black;
+            padding: 6px 6px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-left: 6px;
+        }
+    
+        .nav .dropdown-content a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+    
+        .nav .dropdown:hover .dropdown-content {
+            display: block;
+        }
+    
+        .hidden-desktop {
+            display: none;
+        }
+    
+        .sidebar-logo {
+            text-align: center;
+            margin-bottom: -5px;
+            /* Adjust as needed */
+            margin-right: 80px;
+            margin-left: 10px
+        }
+    
+        .sidebar-logo img {
+            max-width: 150px;
+            /* Adjust the size as needed */
+        }
+    
+        .sidebar {
+            width: 225px;
+            background-color: #fff;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            padding-top: 10px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+    
+        .sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 16px;
+            color: black;
+            display: block;
+            transition: 0.3s;
+    
+        }
+    
+        .sidebar a:hover {
+            background-color: #f1f1f1;
+        }
+    
+        .sidebar .user-info {
+            margin: 20px 0;
+            padding: 0 15px;
+        }
+    
+        .sidebar .user-info img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+    
+        .sidebar .user-info .user-details {
+            display: flex;
+            align-items: center;
+        }
+    
+        .sidebar .user-info .user-details div {
+            margin-left: 10px;
+        }
+    
+    
+        .sidebar a i {
+            margin-right: 5px;
+        }
+    
+        .dropdown a i {
+            margin-right: 2px;
+        }
+    
+        .nav a i {
+            margin-right: 5px;
+        }
+    
+        .sidebar a.activeLink,
+        .sidebar a.activeLink:hover {
+        color:  #071390 !important;
+        }
+    
+
+        td.asset-name {
+            margin-right: 20px;
+        }
+
+        .r1 {
+            margin-left: 600px;
+        }
+
+        
+
+        .delete-btn {
+            background-color: red;
+            color: white;
+            border: none;
+        }
+
+        .hidden-desktop {
+            display: none;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            
+        }
+
+        .pagination a {
+            color: #071390;
+            padding: 8px 16px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+
+        .pagination a:hover {
+            background-color: #ddd;
+        }
+
+        .pagination .current {
+            background-color: #071390;
+            color: white;
+            margin: 5px;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .pagination a {
+                padding: 8px 10px;
+            }
+        }
+
+        @media only screen and (max-width: 768px) {
+            .hidden-desktop {
+                display: block;
+            }
+
+            .nav {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                background-color: #071390;
+                width: 60%;
+                top: 70px;
+                left: 0;
+                padding: 10px;
+            }
+
+            .nav.open {
+                display: flex;
+            }
+
+            .nav-toggle-label {
+                display: block;
+                padding: 10px;
+                cursor: pointer;
+            }
+
+            .nav-toggle-label span {
+                display: block;
+                width: 25px;
+                height: 3px;
+                background-color: white;
+                margin: 5px;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px;
+            }
+
+            .logo img {
+                max-height: 25px;
+                margin: 0 0 10px 0;
+            }
+
+            .dropdown-content {
+                left: 0;
+                transform: none;
+                min-width: 100%;
+            }
+
+            .dropdown-content a {
+                text-align: left;
+            }
+        }
+
+
+        .content {
+            margin-left: 218px;
+            padding: 20px;
+        }
+        
+        #table-container {
+            margin-top: 50px;
+            margin-left: 5px;
+            margin-right: 50px;
+            background-color: #ffffff;
+            width: 100%;
+            overflow-y: auto; /* Allow vertical scrolling */
+            height: calc(100vh - 100px); /* Adjust height according to your needs */
+        }
+        
+        #customers {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        #customers th,
+        #customers td {
+            padding: 8px 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        #customers th {
+            background-color: #e3e7ea;
+            font-weight: bold;
+        }
+        
+        #customers tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        
+        .filter-container {
+            text-align: right; /* Aligns the filter form to the right */
+            margin-bottom: 20px; /* Add some space below the filter */
+        }
+        
+        .filter-container form {
+            display: inline-block; /* Keeps the label and input on the same line */
+        }
+        
+        .filter-container input[type="text"],
+        .filter-container input[type="date"],
+        .filter-container .filter-btn {
+            margin: 5px; /* Add some space around form elements */
+        }
+        
+        /* Style the filter button */
+        .filter-btn {
+            padding: 5px 10px;
+            cursor: pointer;
+            background-color: #071390;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        
+        .filter-btn:hover {
+            background-color: #050f73;
+        }
+ 
+        .dropdownl {
+            position: relative;
+            display: inline-block;
+            margin-left:30px;
+            padding:-5px;
+           
+        }
+        
+        /* Style for the dropdown link */
+        .dropdown-link {
+            display: block;
+            padding: 10px 15px;
+            color: #333;
+            text-decoration: none;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .dropdown-link:hover {
+            background-color: #e2e6ea;
+        }
+        
+        /* Hidden by default (not displayed) */
+        .dropdown-contentl {
+            display: none;
+            position: absolute;
+            background-color: #ffffff;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        /* Style for dropdown items */
+        .dropdown-contentl a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 12px;
+            transition: background-color 0.3s ease;
+            text-align:center;
+        }
+        
+        .dropdown-contentl a:hover {
+            background-color: #f1f1f1;
+        }
+        
+        /* Show the dropdown content on hover */
+        .dropdownl:hover .dropdown-contentl {
+            display: block;
+        }
+        
+        /* Adjust dropdown link for better alignment */
+        .dropdown-link {
+            display: flex;
+            align-items: center;
+            padding:-5px;
+        }
+        
+        .dropdown-link i {
+            margin-right: 8px;
+            font-size:10px;
+        }
+        
+    </style>
+</head>
+
+<body>
+    <header>
+      
+        <nav class="nav">
+            <a href="{% url 'get_all' %}"><i class="fas fa-user-friends"></i>User Management</a>
+            <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-database"></i> Asset Management</a>
+            <a href="{% url 'site_docu' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-folder-open"></i> Site Documents</a>
+            <a href="{% url 'onsite_user' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-user-circle"></i> On Site User</a>
+            <div class="dropdown">
+                <a href="#" class="dropbtn"><i class="fas fa-language"></i> Language</a>
+                <div class="dropdown-content">
+                    <a href="#"><i class="fas fa-globe"></i> English</a>
+                    <a href="#"><i class="fas fa-globe"></i> Spanish</a>
+                </div>
+            </div>
+            
+            <div class="dropdown">
+                <a href="#" class="dropbtn"><i class="fas fa-sliders-h"></i> Settings</a>
+                <div class="dropdown-content">
+                    <a href="{% url 'time' %}?site_name={{ site_name }}"><i class="far fa-clock"></i> Time Schedule</a>
+                    <a href="{% url 'setting_t' %}?site_name={{ site_name }}"><i class="fas fa-exchange-alt"></i> Turnstile</a>
+                    <a href="{% url 'create_subadmin' %}"><i class="fas fa-user-shield"></i>Manage SubAdmins</a>
+                </div>
+            </div>
+        </nav>
+    
+    </header>
+
+    <a class="nav-toggle-label hidden-desktop" onclick="toggleNav()">
+        <i class="fas fa-bars"></i>
+    </a>
+
+
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <a href="#"><img src="{% static 'app1/images/logo.png' %}" alt="Logo"></a>
+        </div>
+        
+        <a href="{% url 'sites' %}?site_name={{ site_name }}"><i class="fas fa-globe"></i> Site Management</a>
+            
+            {% if site_names %}
+            <div class="dropdownl">
+                <a href="#" class="dropdown-link">
+                    <i class="fa fa-circle"></i> {{ site_name }}
+                </a>
+                <div class="dropdown-contentl">
+                    {% for name in site_names %}
+                        <a href="{% url 'get_all' %}?site_name={{ name.0 }}">{{ name.1 }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        <a href="{% url 'report' %}?site_name={{ site_name }}"><i class="fas fa-chart-line"></i> Analytics & Reports</a>
+        <a href="{% url 'notification1' %}?site_name={{ site_name }}"><i class="fas fa-bell"></i> Notifications</a>
+        <a href="{% url 'company' %}?site_name={{ site_name }}"><i class="fas fa-building"></i> Company</a>
+
+        <br> <br> <br> <br> <br> <br> 
+
+
+        <div class="user-info">
+            <div class="user-details">
+                <img src="{% static 'app1/images/admin_image1.jpg' %}" alt="User">
+                <div>
+                    <p>Annette Black</p>
+                    <small>Admin</small>
+                </div>
+            </div>
+        </div>
+        <a href="{% url 'app2_login' %}" class="logout" style="color: red;"><i class="fas fa-sign-out-alt"></i> Log out</a>
+        <a href="#" class="">AssureTech 2024</a>
+    </div>
+
+    <div class="content">
+        <div id="table-container">
+            <form method="post" action="{% url 'delete_selected5' %}">
+                {% csrf_token %}
+                <div class="filter-container">
+                    <input type="text" id="filterName" placeholder="Filter by Name">
+                    <input type="date" id="filterDate" placeholder="Filter by Date">
+                </div>
+                <table id="customers">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" onClick="toggleAll(this)"></th>
+                            <th>Name</th>
+                            <th>Tag Id</th>
+                            <th>Status</th>
+                            <th>Face</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in on_site_users %}
+                        <tr data-name="{{ i.name }}" data-timestamp="{{ i.timestamp|date:'Y-m-d H:i:s A' }}">
+                            <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
+                            <td>{{ i.name }}</td>
+                            <td>{{ i.tag_id }}</td>
+                            <td>{{ i.status }}</td>
+                            <td>{{i.face}}</td>
+                            <td>{{ i.timestamp|date:"Y-m-d h:i:s A" }}</td> 
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="delete-btn">Delete Selected</button>
+            </form>
+
+            <div class="pagination">
+                <span class="step-links">
+                    {% if on_site_users.has_previous %}
+                        <a href="?page=1{% if site_name %}&site_name={{ site_name }}{% endif %}">&laquo; first</a>
+                        <a href="?page={{ on_site_users.previous_page_number }}{% if site_name %}&site_name={{ site_name }}{% endif %}">previous</a>
+                    {% endif %}
+            
+                    <span class="current">
+                        Page {{ on_site_users.number }} of {{ on_site_users.paginator.num_pages }}.
+                    </span>
+            
+                    {% if on_site_users.has_next %}
+                        <a href="?page={{ on_site_users.next_page_number }}{% if site_name %}&site_name={{ site_name }}{% endif %}">next</a>
+                        <a href="?page={{ on_site_users.paginator.num_pages }}{% if site_name %}&site_name={{ site_name }}{% endif %}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <script>
+        function toggleAll(source) {
+            checkboxes = document.getElementsByName('selected_recordings');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+
+        function toggleNav() {
+            var nav = document.querySelector('.nav');
+            nav.classList.toggle('open');
+        }
+
+        
+        
+    </script>
+
+    <script>
+        function toggleAll(source) {
+            checkboxes = document.getElementsByName('selected_recordings');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+    </script>
+        
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const nameInput = document.getElementById('filterName');
+                const dateInput = document.getElementById('filterDate');
+                const table = document.getElementById('customers');
+            
+                // Convert date from 'YYYY-MM-DD' to 'YYYY-MM-DD'
+                function formatDate(date) {
+                    return date.toISOString().split('T')[0]; // Format to 'YYYY-MM-DD'
+                }
+            
+                function filterTable() {
+                    const nameFilter = nameInput.value.toLowerCase();
+                    const dateFilter = dateInput.value ? formatDate(new Date(dateInput.value)) : '';
+            
+                    table.querySelectorAll('tbody tr').forEach(row => {
+                        const name = row.getAttribute('data-name').toLowerCase();
+                        const timestamp = row.getAttribute('data-timestamp').split(' ')[0]; // Extract date part only
+            
+                        // Check if row matches the filters
+                        const matchesName = name.includes(nameFilter);
+                        const matchesDate = !dateFilter || timestamp === dateFilter;
+            
+                        if (matchesName && matchesDate) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                }
+            
+                // Add event listeners for input fields
+                nameInput.addEventListener('input', filterTable);
+                dateInput.addEventListener('input', filterTable);
+            });
+            </script>
+            
+</body>
+
+</html>

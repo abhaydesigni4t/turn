@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha384-l2pS9FXoq07xZ8T3is0sZuqA4xsJqHvAWEbflU24M6p0T/zl5sJ46R/DLxUJhSZ+7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <title>User Management</title>
+    {% load static %}
+
+    <script>
+ 
+
+        function toggleAll(source) {
+            checkboxes = document.getElementsByName('selected_recordings');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+    
+        function makeInactiveSelected() {
+            var selectedRecords = document.querySelectorAll('input[name="selected_recordings"]:checked');
+            if (selectedRecords.length === 0) {
+                alert("Please select at least one record to make inactive.");
+            } else {
+                var formData = new FormData();
+                selectedRecords.forEach(function(record) {
+                    formData.append('selected_recordings', record.value);
+                });
+
+                fetch('{% url "make_inactive_selected" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload(); 
+                    } else {
+                        alert('Error: ' + response.statusText);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        }
+
+    </script>
+
+   
+
+    <style>
+        
+        body {
+            font-family: 'Verdana', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f4;
+            box-sizing: border-box;
+            {% comment %} min-height: 100vh; /* Full viewport height by default */ {% endcomment %}
+
+        }
+    
+        header {
+            background-color: #ffffff;
+            color: black;
+            text-align: center;
+            padding: 15px 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    
+        .nav a {
+            color: black;
+            padding: 10px 10px;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 3px;
+            transition: color 0.3s ease;
+        }
+    
+        .nav {
+            display: flex;
+            align-items: center;
+            margin-right: auto; /* Adjusted to auto to prevent fixed margin on right */
+            margin-left:315px;
+        }
+    
+    
+        .dropdown {
+            display: inline-block;
+            position: relative;
+            text-align: center;
+        }
+    
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f1f1f1;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            max-width: calc(100vw - 40px);
+            overflow: auto;
+        }
+    
+        .dropdown-content a {
+            color: black;
+            padding: 8px 10px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+    
+        .nav .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #ffffff;
+            min-width: 20px;
+            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+    
+        .nav .dropdown-content a {
+            float: none;
+            color: black;
+            padding: 6px 6px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-left: 6px;
+        }
+    
+        .nav .dropdown-content a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+    
+        .nav .dropdown:hover .dropdown-content {
+            display: block;
+
+        }
+            .hidden-desktop {
+                display: none;
+            }
+        
+            
+            .sidebar-logo {
+                text-align: center;
+                margin-bottom: -5px;
+                /* Adjust as needed */
+                margin-right: 80px;
+                margin-left: 10px
+            }
+        
+            .sidebar-logo img {
+                max-width: 150px;
+                /* Adjust the size as needed */
+            }
+        
+        
+            .sidebar {
+                width: 225px;
+                background-color: #fff;
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                padding-top: 10px;
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+            }
+        
+            .sidebar a {
+                padding: 10px 15px;
+                text-decoration: none;
+                font-size: 16px;
+                color: black;
+                display: block;
+                transition: 0.3s;
+        
+            }
+        
+            .sidebar a:hover {
+                background-color: #f1f1f1;
+            }
+        
+            .sidebar .user-info {
+                margin: 20px 0;
+                padding: 0 15px;
+            }
+        
+            .sidebar .user-info img {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                margin-right: 10px;
+            }
+        
+            .sidebar .user-info .user-details {
+                display: flex;
+                align-items: center;
+            }
+        
+            .sidebar .user-info .user-details div {
+                margin-left: 10px;
+            }
+        
+     
+            .sidebar a i {
+                margin-right: 5px;
+            }
+
+            .nav a i {
+                margin-right: 5px;
+            }
+        
+            .dropdown a i {
+                margin-right: 2px;
+            }
+        
+
+            .user {
+                margin-left: 0px;
+                margin-top: 80px;
+            }
+            
+            #table-container {
+                margin-left: 218px; /* Adjust based on sidebar width */
+                padding: 10px;
+                background-color: #ffffff;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                margin-top: 7px; 
+                width: auto;
+                overflow-x: auto; /* Add horizontal scrollbar if needed */
+            }
+            
+            .filter-container {
+                display: flex;
+                flex-wrap: wrap; /* Allow wrapping of filters on smaller screens */
+                gap: 1rem;
+                margin-bottom: 20px;
+                
+            }
+            
+            .filter-container label {
+                font-weight: bold;
+                margin-right: -2px;
+                font-size:15px;
+            }
+            
+            .filter-container input,
+            .filter-container select {
+                padding: 2px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                width: 100px;
+                max-width: 100%; /* Ensure inputs don't overflow on small screens */
+            }
+            
+            /* Table styles */
+            #customers {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }
+            
+            #customers td {
+                padding: 0px; /* Increase padding for better readability */
+                text-align: center;
+                border-bottom: 1px solid #ddd;
+                white-space: nowrap; /* Prevent text from wrapping */
+            }
+            
+            #customers th {
+                padding: 8px; /* Increase padding for better readability */
+                background-color: #e3e7ea;
+                font-weight: bold;
+                text-align: center; /* Center-align header text */
+                position: relative; /* Needed for absolute positioning of the sort icon */
+                font-size:15px;
+            }
+            
+            #customers tbody tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+            
+            .heading1 {
+                text-align: center;
+                color: #071390;
+            }
+            
+            .user .add {
+                display: inline-block;
+                padding: 8px 15px;
+                background-color: #071390;
+                color: #ffffff;
+                text-decoration: none;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: bold;
+                transition: background-color 0.3s ease;
+                margin-left: 230px;
+                margin-top: 20px;
+            }
+            
+            .user .add:hover {
+                background-color: #0056b3;
+            }
+            
+            .inactive-btn {
+                padding: 5px 12px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-right: 5px;
+                text-decoration: none;
+                background-color: #ffc107;
+                color: #ffffff;
+            }
+            
+            .delete-btn1 {
+                padding: 5px 12px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-right: 5px;
+                text-decoration: none;
+                background-color: #dc3545;
+                color: #ffffff;
+            }
+            
+            .edit-btn {
+                background-color: #dbdbdb;
+                color: black;
+                padding: 8px 16px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-right: 5px;
+                text-decoration: none;
+            }
+            
+            .dropdown-contentb .delete-btn {
+                background-color: #071390;
+                color: white;
+                padding: 8px 16px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-right: 5px;
+                text-decoration: none;
+            }
+            
+            .inactive-btn:hover {
+                background-color: #e0a800;
+            }
+            
+            #filterStatus option[selected] {
+                background-color: #ddd;
+            }
+            
+            .filter-container {
+                margin-bottom: 5px;
+                margin-left: 40px;
+            }
+            
+            .filter-icon {
+                margin-right: 2px;
+                cursor: pointer;
+            }
+            
+            th div {
+                display: flex;
+                align-items: center;
+            }
+            
+            th {
+                cursor: pointer;
+                padding-right: 25px; /* Adjust spacing to make room for the icon */
+            }
+            
+            th.sortable::after {
+                content: "\f0dc"; /* Default to FontAwesome sort icon */
+                position: absolute;
+                right: 0px; /* Distance from the right edge */
+                top: 50%;
+                transform: translateY(-50%);
+                font-family: FontAwesome, sans-serif; /* Ensure FontAwesome or equivalent is loaded */
+                font-size: 16px; /* Adjust size as needed */
+                color: #333; /* Adjust color to match your theme */
+            }
+            
+            th.sortable.asc::after {
+                content: "\f0de"; /* FontAwesome sort up */
+            }
+            
+            th.sortable.desc::after {
+                content: "\f0dd"; /* FontAwesome sort down */
+            }
+            
+            
+            
+   
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            margin-bottom: 40px;
+            margin-left:-20px;
+            
+        }
+        
+        .pagination .step-links a,
+        .pagination .step-links span {
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 0 5px;
+            text-decoration: none;
+            color: #071390;
+        }
+        
+        .pagination .step-links .current {
+            background-color: #071390;
+            color: #ffffff;
+        }
+        
+        .pagination .step-links a:hover {
+            background-color: #071390;
+            color: #ffffff;
+        }
+    .hidden-desktop {
+        display: none;
+    }
+
+    .table-actions {
+        position: relative;
+    }
+    
+    /* Container needed to position the dropdown content */
+.dropdownb {
+    position: relative;
+    display: inline-block;
+}
+
+/* Style the dropdown button */
+.toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* Style for the dropdown content */
+.dropdown-contentb {
+    display: none;
+    position: absolute;
+    top: 100%; /* Position the dropdown content directly below the button */
+    left: -28px; /* Align the dropdown content to the left */
+    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    min-width: 70px;
+}
+
+/* Links inside the dropdown */
+.dropdown-contentb a {
+    color: black;
+    padding: 10px 11px;
+    text-decoration: none;
+    display: block;
+}
+
+
+/* Use :hover to display the dropdown when the button is hovered */
+.dropdownb:hover .dropdown-contentb {
+    display: block;
+}
+
+/* Additional styling for the button icon */
+.btn-icon {
+    background: none; /* Remove background color */
+    border: none;     /* Remove border */
+    color: inherit;   /* Inherit text color */
+    cursor: pointer;  /* Pointer cursor */
+    padding: 0;       /* Remove padding */
+}
+
+.btn-icon i {
+    font-size: 16px;  /* Adjust icon size if needed */
+}
+
+
+    .sidebar a.activeLink,
+    .sidebar a.activeLink:hover {
+        color:  #071390 !important;
+    }
+
+    .dropdownl {
+        position: relative;
+        display: inline-block;
+        margin-left:30px;
+        padding:-5px;
+       
+    }
+    
+    /* Style for the dropdown link */
+    .dropdown-link {
+        display: block;
+        padding: 10px 15px;
+        color: #333;
+        text-decoration: none;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 10px;
+        transition: background-color 0.3s ease;
+    }
+    
+    .dropdown-link:hover {
+        background-color: #e2e6ea;
+    }
+    
+    /* Hidden by default (not displayed) */
+    .dropdown-contentl {
+        display: none;
+        position: absolute;
+        background-color: #ffffff;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    /* Style for dropdown items */
+    .dropdown-contentl a {
+        color: #333;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        font-size: 12px;
+        transition: background-color 0.3s ease;
+        text-align:center;
+    }
+    
+    .dropdown-contentl a:hover {
+        background-color: #f1f1f1;
+    }
+    
+    /* Show the dropdown content on hover */
+    .dropdownl:hover .dropdown-contentl {
+        display: block;
+    }
+    
+    /* Adjust dropdown link for better alignment */
+    .dropdown-link {
+        display: flex;
+        align-items: center;
+        padding:-5px;
+    }
+    
+    .dropdown-link i {
+        margin-right: 8px;
+        font-size:10px;
+    }
+    
+
+ 
+    @media (max-width: 768px) {
+        .header .nav {
+            display: none;
+        }
+
+        .hidden-desktop {
+            display: block;
+            position: absolute;
+            top: 15px;
+            left: 15px; /* Changed from right to left */
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .sidebar {
+            width: 200px;
+            transform: translateX(-250px); /* Hidden by default */
+        }
+
+        .sidebar.active {
+            transform: translateX(0); /* Show sidebar */
+        }
+
+        #table-container {
+            margin-left: 0;
+            padding: 15px;
+            background-color: #ffffff;
+            width:1330px;
+        }
+
+        .logo img {
+            max-height: 40px;
+        }
+
+        .user {
+            margin-top: 70px;
+            margin-left:-240px;
+        }
+
+        .nav {
+            margin-right: auto; /* Adjusted to auto to prevent fixed margin on right */
+            margin-left:65px;
+        }
+
+
+    }
+
+    
+    </style>
+</head>
+
+<body>
+    <header>
+
+        <div class="hidden-desktop" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <nav class="nav">
+            <a href="{% url 'get_all' %}?site_name={{ site_name }}"><i class="fas fa-user-friends"></i>User Management</a>
+            <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-database"></i> Asset Management</a>
+            <a href="{% url 'site_docu' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-folder-open"></i> Site Documents</a>
+            <a href="{% url 'onsite_user' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-user-circle"></i> On Site User</a>
+            <div class="dropdown">
+                <a href="#" class="dropbtn"><i class="fas fa-language"></i> Language</a>
+                <div class="dropdown-content">
+                    <a href="#"><i class="fas fa-globe"></i> English</a>
+                    <a href="#"><i class="fas fa-globe"></i> Spanish</a>
+                </div>
+            </div>
+            
+            <div class="dropdown">
+                <a href="#" class="dropbtn"><i class="fas fa-sliders-h"></i> Settings</a>
+                <div class="dropdown-content">
+                    <a href="{% url 'time' %}?site_name={{ site_name }}"><i class="far fa-clock"></i> Time Schedule</a>
+                    <a href="{% url 'setting_t' %}?site_name={{ site_name }}"><i class="fas fa-exchange-alt"></i> Turnstile</a>
+                    <a href="{% url 'create_subadmin' %}"><i class="fas fa-user-shield"></i>Manage SubAdmins</a>
+                </div>
+            </div>
+        </nav>
+    
+    </header>
+
+    <a class="nav-toggle-label hidden-desktop" onclick="toggleNav()">
+        <i class="fas fa-bars"></i>
+    </a>
+
+
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <a href="#"><img src="{% static 'app1/images/logo.png' %}" alt="Logo"></a>
+        </div>
+        
+        <a href="{% url 'sites' %}?site_name={{ site_name }}"><i class="fas fa-globe"></i> Site Management</a>
+        <!-- Dropdown Link for First Site -->
+        {% if site_names %}
+        <div class="dropdownl">
+            <a href="#" class="dropdown-link">
+                <i class="fa fa-circle"></i> {{ site_name }}
+            </a>
+            <div class="dropdown-contentl">
+                {% for name in site_names %}
+                    <a href="{% url 'get_all' %}?site_name={{ name.0 }}">{{ name.1 }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+        <a href="{% url 'report' %}?site_name={{ site_name }}"><i class="fas fa-chart-line"></i> Analytics & Reports</a>
+        <a href="{% url 'notification1' %}?site_name={{ site_name }}"><i class="fas fa-bell"></i> Notifications</a>
+        <a href="{% url 'company' %}?site_name={{ site_name }}"><i class="fas fa-building"></i> Company</a>
+
+        <br> <br> <br> <br> <br> <br> 
+
+
+        <div class="user-info">
+            <div class="user-details">
+                <img src="{% static 'app1/images/admin_image1.jpg' %}" alt="User">
+                <div>
+                    <p>Annette Black</p>
+                    <small>Admin</small>
+                </div>
+            </div>
+        </div>
+        <a href="{% url 'app2_login' %}" class="logout" style="color: red;"><i class="fas fa-sign-out-alt"></i> Log out</a>
+        <a href="#" class="">AssureTech 2024</a>
+    </div>
+
+    <div class="user">
+        <a class="add" href="{% url 'create' %}">Add User</a>
+    </div>
+
+    <div id="table-container">
+
+        <form id="filterForm">
+            <div class="filter-container">
+                <label for="filterName">Name</label>
+                <input type="text" id="filterName" name="filterName" value="{{ filterName|default_if_none:'' }}">
+        
+                <label for="filterCompanyName">Company</label>
+                <input type="text" id="filterCompanyName" name="filterCompanyName" value="{{ filterCompanyName|default_if_none:'' }}">
+        
+                <label for="filterJobRole">Job</label>
+                <input type="text" id="filterJobRole" name="filterJobRole" value="{{ filterJobRole|default_if_none:'' }}">
+        
+                <label for="filterJobLocation">Location</label>
+                <input type="text" id="filterJobLocation" name="filterJobLocation" value="{{ filterJobLocation|default_if_none:'' }}">
+        
+                <label for="filterStatus">Status</label>
+                <select id="filterStatus" name="filterStatus">
+                    <option value="">All</option>
+                    <option value="active" {% if filterStatus == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if filterStatus == 'inactive' %}selected{% endif %}>Inactive</option>
+                    <option value="pending" {% if filterStatus == 'pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </div>
+        </form>
+        
+        <form method="post" action="{% url 'delete_selected2' %}">
+            {% csrf_token %}
+        <table id="customers">
+            <tr>
+                <th><input type="checkbox" onClick="toggleAll(this)"></th>
+                <th class="sortable">SrNo</th>
+            <th>Img</th>
+            <th class="sortable">Name</th>
+            <th class="sortable">Company</th>
+            <th class="sortable">Job</th>
+            <th class="sortable">Tag ID</th>
+            <th class="sortable">Location</th>
+            <th>Orientation</th>
+            <th>FD</th>
+            <th>SST</th>
+            <th>Status</th>
+            <th>Action</th>
+            </tr>
+
+            {% for index,i in data %}
+            <tr>
+                <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
+                
+                <td>{{index}}</td>
+                <td>
+                    {% if i.picture %}
+                    <img src="{{ i.picture.url }}" alt="user" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+                    {% else %}
+                    <img src="{% static 'app1/images/img1.jpg' %}" alt="user" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+                    {% endif %}
+                </td>
+                
+                
+                <td><a href="{% url 'user_update' i.sr %}"style="text-decoration: none;">{{ i.name }}</a></td>
+                <td>{{i.company_name}}</td>
+                <td>{{i.job_role}}</td>
+                <td>{{i.tag_id}}</td>
+                <td>{{i.job_location}}</td>
+                {% load custom_filters %}
+                <td>
+                    {% if i.orientation %}
+                    {% with file_extension=i.orientation.name|lower %}
+                    <a href="{{ i.orientation.url }}" target="_blank">
+                        <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                                    {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                                    {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                                    {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                                    {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                                    {% else %}far fa-file
+                                {% endif %}"></i>
+                    </a>
+                    {% endwith %}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                {% load custom_filters %}
+                <td>
+                    {% with file_extension=i.facial_data.name|lower %}
+                    <a href="{% url 'show_facial_data_images' i.pk %}" target="_blank">
+                        <i class="far fa-file-image
+                            {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                            {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                            {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                            {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                            {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                            {% else %}far fa-file
+                            {% endif %}
+                        "></i>
+                    </a>
+                    {% endwith %}
+                </td>
+                <td>
+                    {% if i.my_comply %}
+                    {% with file_extension=i.my_comply.name|lower %}
+                    <a href="{{ i.my_comply.url }}" target="_blank">
+                        <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                                    {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                                    {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                                    {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                                    {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                                    {% else %}far fa-file
+                                {% endif %}"></i>
+                    </a>
+                    {% endwith %}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                <td>{{i.status}}</td>
+                <td>
+                    <div class="dropdownb">
+                        <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
+                        <div class="dropdown-contentb">
+                            <a href="{% url 'user_update' i.sr %}" class="edit-btn">Edit</a>
+                            <a href="{% url 'task_delete' i.pk %}" class="delete-btn">Delete</a>
+                        </div>
+                    </div>
+                </td>
+                
+            </tr>
+            {% endfor %}
+        </table>
+        <button type="submit" class="delete-btn1">Delete Selected</button>
+        <button type="button" class="inactive-btn" onclick="makeInactiveSelected()">Make Inactive</button>
+
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if filterName %}&filterName={{ filterName }}{% endif %}{% if filterCompanyName %}&filterCompanyName={{ filterCompanyName }}{% endif %}{% if filterJobRole %}&filterJobRole={{ filterJobRole }}{% endif %}{% if filterJobLocation %}&filterJobLocation={{ filterJobLocation }}{% endif %}{% if filterStatus %}&filterStatus={{ filterStatus }}{% endif %}">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if filterName %}&filterName={{ filterName }}{% endif %}{% if filterCompanyName %}&filterCompanyName={{ filterCompanyName }}{% endif %}{% if filterJobRole %}&filterJobRole={{ filterJobRole }}{% endif %}{% if filterJobLocation %}&filterJobLocation={{ filterJobLocation }}{% endif %}{% if filterStatus %}&filterStatus={{ filterStatus }}{% endif %}">previous</a>
+                {% endif %}
+        
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+        
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if filterName %}&filterName={{ filterName }}{% endif %}{% if filterCompanyName %}&filterCompanyName={{ filterCompanyName }}{% endif %}{% if filterJobRole %}&filterJobRole={{ filterJobRole }}{% endif %}{% if filterJobLocation %}&filterJobLocation={{ filterJobLocation }}{% endif %}{% if filterStatus %}&filterStatus={{ filterStatus }}{% endif %}">next</a>
+                    <a href="?page={{ paginator.num_pages }}{% if filterName %}&filterName={{ filterName }}{% endif %}{% if filterCompanyName %}&filterCompanyName={{ filterCompanyName }}{% endif %}{% if filterJobRole %}&filterJobRole={{ filterJobRole }}{% endif %}{% if filterJobLocation %}&filterJobLocation={{ filterJobLocation }}{% endif %}{% if filterStatus %}&filterStatus={{ filterStatus }}{% endif %}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+        
+    </div>
+
+    <script>
+
+ 
+        document.addEventListener('DOMContentLoaded', function() {
+            const pathName = window.location.pathname;
+            const activeLink = document.querySelector(`.sidebar a[href="${pathName}"]`);
+        
+            if (activeLink) {
+                activeLink.classList.add('activeLink');
+                activeLink.style.color = 'blue'; // Add this line to set the color to blue
+            }
+        });
+        
+</script>
+
+<script>
+    function toggleNav() {
+        var nav = document.querySelector('.nav');
+        nav.classList.toggle('open');
+        }
+</script>
+     
+<script>
+    function toggleSidebar() {
+        var sidebar = document.querySelector('.sidebar');
+        sidebar.classList.toggle('active');
+    }
+
+    document.addEventListener('click', function(event) {
+        var sidebar = document.querySelector('.sidebar');
+        var hamburgerIcon = document.querySelector('.hidden-desktop');
+        
+        if (!sidebar.contains(event.target) && !hamburgerIcon.contains(event.target)) {
+            sidebar.classList.remove('active');
+        }
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        function sortTable(n, ascending) {
+            const table = document.getElementById("customers");
+            let rows, switching, i, x, y, shouldSwitch, dir;
+            dir = ascending ? "asc" : "desc"; 
+            switching = true;
+        
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                
+                for (i = 1; i < (rows.length - 1); i++) {
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    let xValue = x.textContent || x.innerText;
+                    let yValue = y.textContent || y.innerText;
+                    
+                    // Convert to integers if possible
+                    let xNum = parseFloat(xValue);
+                    let yNum = parseFloat(yValue);
+
+                    if (!isNaN(xNum) && !isNaN(yNum)) {
+                        xValue = xNum;
+                        yValue = yNum;
+                    } else {
+                        xValue = xValue.toLowerCase();
+                        yValue = yValue.toLowerCase();
+                    }
+
+                    if (dir === "asc" && xValue > yValue) {
+                        shouldSwitch = true;
+                        break;
+                    } else if (dir === "desc" && xValue < yValue) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+        
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                }
+            }
+        }
+
+        // Add click event listeners for table headers
+        const headers = document.querySelectorAll("#customers th");
+        headers.forEach((header, index) => {
+            header.addEventListener("click", () => {
+                const isAscending = header.classList.contains("asc");
+                sortTable(index, !isAscending);
+                headers.forEach(h => h.classList.remove("asc", "desc"));
+                header.classList.add(isAscending ? "desc" : "asc");
+            });
+        });
+
+        // Set the default sorting order for the first column
+        headers[0].classList.add("asc"); // Default to ascending order for the first column
+    });
+</script>
+
+    
+    <script>
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+    
+        function applyFilters() {
+            var filterName = encodeURIComponent(document.getElementById('filterName').value.trim());
+            var filterCompanyName = encodeURIComponent(document.getElementById('filterCompanyName').value.trim());
+            var filterJobRole = encodeURIComponent(document.getElementById('filterJobRole').value.trim());
+            var filterJobLocation = encodeURIComponent(document.getElementById('filterJobLocation').value.trim());
+            var filterStatus = encodeURIComponent(document.getElementById('filterStatus').value.trim());
+    
+            var url = new URL(window.location.href);
+            url.searchParams.set('filterName', filterName);
+            url.searchParams.set('filterCompanyName', filterCompanyName);
+            url.searchParams.set('filterJobRole', filterJobRole);
+            url.searchParams.set('filterJobLocation', filterJobLocation);
+            url.searchParams.set('filterStatus', filterStatus);
+            url.searchParams.set('page', 1);  // Reset to the first page
+    
+            window.location.href = url.toString(); // Reload the page
+        }
+    
+        var debouncedApplyFilters = debounce(applyFilters, 1500);
+    
+        document.getElementById('filterName').addEventListener('input', debouncedApplyFilters);
+        document.getElementById('filterCompanyName').addEventListener('input', debouncedApplyFilters);
+        document.getElementById('filterJobRole').addEventListener('input', debouncedApplyFilters);
+        document.getElementById('filterJobLocation').addEventListener('input', debouncedApplyFilters);
+        document.getElementById('filterStatus').addEventListener('change', debouncedApplyFilters);
+    </script>
+    
+    
+    
+</body>
+
+</html>
