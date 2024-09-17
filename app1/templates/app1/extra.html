@@ -13,23 +13,84 @@ make parameter dynamic
 and check pagination code sort all data this code sort current page data only
 when i go to next page then it not return next sorted data it return constant data that belong to that page
 
-
+we have google.html file write render function to render html file 
 *********************
 
 
 
-get asset
-http://44.214.230.69:8000/get_assets_api/project2/
-
-get exit status
-http://44.214.230.69:8000/exits/project1/
-
-get onsite user 
-http://44.214.230.69:8000/get_onsite_api/project1/
 
 
 
 
 ***************************888
 
-{"token":"eyJhbGciOiJSUzI1NiIsImtpZCI6ImQ3YjkzOTc3MWE3ODAwYzQxM2Y5MDA1MTAxMmQ5NzU5ODE5MTZkNzEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyNjY1MzgyNzIyMTQtaGxnNXMyczlhOG1qN3V2YmNrdmlkNGF1aWpha29jZm0uYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyNjY1MzgyNzIyMTQtaGxnNXMyczlhOG1qN3V2YmNrdmlkNGF1aWpha29jZm0uYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTU5OTc3ODM3NjgxNDI5NDUzNDciLCJlbWFpbCI6Iml0a2FyZWFiYnlAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJKcWFCeERmWnNEOFpWbXFRLWJka1dBIiwiaWF0IjoxNzI2MTMyNjQxLCJleHAiOjE3MjYxMzYyNDF9.aEI6RHBPegw_KGUlIoQBUIYOFEVN52mfA7_XLJl6_smq66I0yDigZesqdMe6GhGkS3mtXaDU8J1qtAIX0aAOtuBKj7Dy_jBePSuWiOb1d0Gbq7DRNTIU9HksXHdpJN_AOaBLTPauXpuMPph1JN-9VzF0O6BAAJlOTyjM4MCQJv_BZHfIyWtk8-muqZAstc6In9DvoJVfkSVDI6tlDyZjeAoEP6ZUQx6gfCWjfzYwwOK2j2nOKwqVnmOyhGrkO_54FbeEecGCijmfLc6O69tL0OPLGedIne74GWKmgotf2upnuvnkNgq-cOjkjl3ZhBz0ywN3PTDrWU1Y4netb60QOg"}
+# views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from django.conf import settings
+from .models import CustomUser
+from rest_framework_simplejwt.tokens import RefreshToken
+
+class GoogleLogin(APIView):
+    def post(self, request):
+        token = request.data.get("token")
+
+        try:
+            # Verify the token with Google's servers
+            idinfo = id_token.verify_oauth2_token(token, requests.Request(), settings.GOOGLE_CLIENT_ID)
+
+            if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+                raise ValueError('Wrong issuer.')
+
+            # Get user info from the token
+            google_id = idinfo['sub']
+            email = idinfo['email']
+            name = idinfo['name']
+
+            # Check if the user already exists, otherwise create one
+            user, created = CustomUser.objects.get_or_create(
+                google_id=google_id,
+                defaults={'email': email, 'name': name, 'username': email.split('@')[0]}
+            )
+
+            # Generate JWT for the user
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }, status=status.HTTP_200_OK)
+
+        except ValueError:
+            return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+            # settings.py
+            REST_FRAMEWORK = {
+                'DEFAULT_AUTHENTICATION_CLASSES': (
+                    'rest_framework_simplejwt.authentication.JWTAuthentication',
+                ),
+            }
+            
+            SIMPLE_JWT = {
+                'AUTH_HEADER_TYPES': ('Bearer',),
+            }
+            
+            # Add your Google OAuth credentials
+            GOOGLE_CLIENT_ID = 'your-google-client-id.apps.googleusercontent.com'
+
+
+    pip install djangorestframework-simplejwt google-auth google-auth-oauthlib
+
+
+            # models.py
+            from django.db import models
+            from django.contrib.auth.models import AbstractUser
+            
+            class CustomUser(AbstractUser):
+                google_id = models.CharField(max_length=255, unique=True)
+                email = models.EmailField(unique=True)
+                name = models.CharField(max_length=255)
