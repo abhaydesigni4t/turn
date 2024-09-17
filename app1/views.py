@@ -3123,3 +3123,75 @@ class GoogleLoginAPIView(APIView):
             return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# from django.contrib.auth.models import User
+# from rest_framework.response import Response
+# from rest_framework.decorators import api_view
+# from rest_framework import status
+
+
+# @api_view(['POST'])
+# def google_login_or_register(request):
+#     email = request.data.get('email')
+#     display_name = request.data.get('display_name')
+
+#     if not email:
+#         return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+#     try:
+#         # Check if the user already exists in the database
+#         user = UserEnrolled.objects.get(email=email)
+#         return Response({
+#             'message': 'User logged in successfully',
+#             'email': user.email,
+#         }, status=status.HTTP_200_OK)
+#     except UserEnrolled.DoesNotExist:
+#         # If user doesn't exist, create a new user
+#         user = UserEnrolled.objects.create(
+#             username=display_name,
+#             email=email,
+#             password=UserEnrolled.objects.make_random_password()  # Random password as it's a Google user
+#         )
+#         return Response({
+#             'message': 'User registered successfully',
+#             'email': user.email,
+#         }, status=status.HTTP_201_CREATED)
+        
+
+
+from django.contrib.auth.hashers import make_password, check_password
+from django.core.validators import FileExtensionValidator
+from django.db import models
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
+
+# Assuming UserEnrolled is your custom user model
+from .models import UserEnrolled
+
+@api_view(['POST'])
+def google_login_or_register(request):
+    email = request.data.get('email')
+    display_name = request.data.get('display_name')
+
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Check if the user already exists in the database
+        user = UserEnrolled.objects.get(email=email)
+        return Response({
+            'message': 'User logged in successfully',
+            'email': user.email,
+        }, status=status.HTTP_200_OK)
+    except UserEnrolled.DoesNotExist:
+        # If user doesn't exist, create a new user
+        user = UserEnrolled.objects.create(
+            name=display_name,
+            email=email,
+            password=make_password('default_password'),  # Set a default password or handle it differently
+            # You might need to set other required fields based on your model
+        )
+        return Response({
+            'message': 'User registered successfully',
+            'email': user.email,
+        }, status=status.HTTP_201_CREATED)

@@ -143,9 +143,9 @@ urlpatterns = [
     path('site_users/<str:site>/', SiteWorkersAPIView.as_view(), name='site_users'),
     path('pending_users/<str:site>/', PendingSiteWorkersAPIView.as_view(), name='site_users'),
     path('users_without_tag/', UserEnrolledViewNoTag.as_view({'get': 'list'}), name='users_without_tag'),
-    path('google_login/', views.google_login_view, name='google-login'),
+    #path('google_login/', views.google_login_view, name='google-login'),
     path('google/', GoogleLoginAPIView.as_view(), name='google'),
-   
+    path('google_login/',views.google_login_or_register,name='google_login'),
 
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
