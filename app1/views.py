@@ -3165,9 +3165,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 
-# Assuming UserEnrolled is your custom user model
-from .models import UserEnrolled
-
 @api_view(['POST'])
 def google_login_or_register(request):
     email = request.data.get('email')
@@ -3187,6 +3184,74 @@ def google_login_or_register(request):
         # If user doesn't exist, create a new user
         user = UserEnrolled.objects.create(
             name=display_name,
+            email=email,
+            password=make_password('default_password'),  # Set a default password or handle it differently
+            # You might need to set other required fields based on your model
+        )
+        return Response({
+            'message': 'User registered successfully',
+            'email': user.email,
+        }, status=status.HTTP_201_CREATED)
+
+
+
+# from django.contrib.auth.models import User
+# from django.contrib.auth import authenticate
+# from django.http import JsonResponse
+# import json
+
+# def apple_sign_in(request):
+#     if request.method == 'POST':
+#         data = json.loads(request.body)
+#         email = data.get('email')
+#         password = data.get('password')  # You can use the identity token as a password
+#         first_name = data.get('first_name', '')
+
+#         # Check if the user already exists
+#         if User.objects.filter(email=email).exists():
+#             # If the user exists, authenticate and log them in
+#             user = authenticate(username=email, password=password)
+#             if user is not None:
+#                 return JsonResponse({'message': 'Login successful', 'status': 'login'}, status=200)
+#             else:
+#                 return JsonResponse({'message': 'Login failed'}, status=400)
+#         else:
+#             # If the user doesn't exist, register them
+#             user = User.objects.create_user(username=email, email=email, first_name=first_name)
+#             user.set_password(password)  # Optional password handling
+#             user.save()
+#             return JsonResponse({'message': 'User registered successfully', 'status': 'register'}, status=201)
+        
+        
+    
+from django.contrib.auth.hashers import make_password
+from django.core.validators import FileExtensionValidator
+from django.db import models
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
+
+@api_view(['POST'])
+def apple_sign_in(request):
+    identity_token = request.data.get('identity_token')
+    first_name = request.data.get('first_name')
+    last_name = request.data.get('last_name')
+    email = request.data.get('email')
+
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Check if the user already exists in the database
+        user = UserEnrolled.objects.get(email=email)
+        return Response({
+            'message': 'User logged in successfully',
+            'email': user.email,
+        }, status=status.HTTP_200_OK)
+    except UserEnrolled.DoesNotExist:
+        name = f"{first_name} {last_name}" if first_name and last_name else "Unknown User"
+        user = UserEnrolled.objects.create(
+            name=name,
             email=email,
             password=make_password('default_password'),  # Set a default password or handle it differently
             # You might need to set other required fields based on your model
