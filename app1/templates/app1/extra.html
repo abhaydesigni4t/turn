@@ -23,74 +23,172 @@ we have google.html file write render function to render html file
 
 
 ***************************888
+check this api if i post 15 images first time then it post 15 images successfully 
+like shows in terminal like this Found 1 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\michael-dam-mEZ3PoFGs_k-unsplash.jpg
+--> processing image 14/15
+Found 0 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\sub-admin-sites.png
+--> processing image 15/15
+Found 0 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\WhatsApp_Image_2024-06-04_at_11.41.39_AM_8.jpeg
 
-for this api i post data using postman like this "{
-    "identity_token": "001644.e56a6538ed9042ea9a08451676f91573.1258",
-    "first_name": "jon9",
-    "last_name": "watson",
-    "email": "jon9@assure-tech.online"
-    
-}" but this api i use for save user in userenrolled model user login using apple using flutter app 
-so after login with apple flutter app give response like this 
-"(001644.e56a6538ed9042ea9a08451676f91573.1258, isaac, feuerwerger, support@assure-tech.online, [identityToken set: true], null)"
-"flutter: AuthorizationCredentialAppleID(001644.e56a6538ed9042ea9a08451676f91573.1258, isaac, feuerwerger, support@assure-tech.online, [identityToken set: true], null)
-" like 2 ways so i wanted to save identity_token,fisrt_name,last_name and email in my model 
-so i created this api check this api correct or not 
+but after i again post 15 images so it look like this in terminal 
+Found 1 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\michael-dam-mEZ3PoFGs_k-unsplash_P8ae3Z8.jpg
+--> processing image 27/30
+Found 0 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\sub-admin-sites.png
+--> processing image 28/30
+Found 0 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\sub-admin-sites_SnDGbxe.png
+--> processing image 29/30
+Found 0 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\WhatsApp_Image_2024-06-04_at_11.41.39_AM_8.jpeg
+--> processing image 30/30
+Found 0 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\WhatsApp_Image_2024-06-04_at_11.41.39_AM_8_Y1t3Fmd.jpeg
+--> encodings finalized
+i think again it post 30 images first 15 and 15 images now i give total 30 images and it increase 45,55 like this
+if i give 15 images then only post 15 not post including previous ones
+this is api "import pickle
+from imutils import paths
+import face_recognition
+import pickle
+import cv2
+from .serializers import FacialImageDataSerializer
 
-"from django.contrib.auth.models import User
-from django.contrib.auth.hashers import make_password
-from django.utils.crypto import get_random_string
-from rest_framework.decorators import api_view
+class FacialDataApi(APIView):
+    def post(self, request):
+        serializer = FacialImageDataSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            images = serializer.validated_data['facial_data']
+            try:
+                user = UserEnrolled.objects.get(email=email)
+                for image in images:
+                    user.facial_data = image
+                    user.save()
+                    
+                if images:
+                    random_image = random.choice(images)
+                    user.picture = random_image
+                    user.save()
+                    
+            except UserEnrolled.DoesNotExist:
+                return Response("User not found", status=status.HTTP_404_NOT_FOUND)
+            user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name))
+            self.update_pickle(user_folder)
+
+            return Response("Images uploaded and facial data updated successfully", status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update_pickle(self, user_folder):
+        pickle_file_path = os.path.join(user_folder, 'encodings.pickle')
+
+        imagePaths = list(paths.list_images(user_folder))
+
+        knownEncodings = []
+        knownNames = []
+
+        print(f"Total images found: {len(imagePaths)}")
+
+        for (i, imagePath) in enumerate(imagePaths):
+            print(f"--> processing image {i + 1}/{len(imagePaths)}")
+            name = os.path.basename(os.path.dirname(imagePath))
+
+            image = cv2.imread(imagePath)
+            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+            boxes = face_recognition.face_locations(rgb, model="hog")
+            encodings = face_recognition.face_encodings(rgb, boxes)
+
+            print(f"Found {len(encodings)} face(s) in {imagePath}")
+
+            for encoding in encodings:
+                knownEncodings.append(encoding)
+                knownNames.append(name)
+
+        #print('--> encodings:', knownEncodings)
+        # print('--> names:', knownNames)
+
+        data = {"encodings": knownEncodings, "names": knownNames}
+        with open(pickle_file_path, 'wb') as f:
+            pickle.dump(data, f)
+
+        print('--> encodings finalized') 
+        "
+this is seralizer "class FacialImageDataSerializer(serializers.Serializer):
+email = serializers.EmailField()
+facial_data = serializers.ListField(child=serializers.ImageField())"
+
+
+
+****************
+
+
+import pickle
+from imutils import paths
+import face_recognition
+import cv2
+from django.conf import settings
 from rest_framework.response import Response
 from rest_framework import status
-from .models import UserEnrolled
+from .serializers import FacialImageDataSerializer
 
-def generate_random_password(length=12):
-    """Generate a random password."""
-    return get_random_string(length)
+class FacialDataApi(APIView):
+    def post(self, request):
+        serializer = FacialImageDataSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            images = serializer.validated_data['facial_data']
+            try:
+                user = UserEnrolled.objects.get(email=email)
+                user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name))
+                
+                # Save new images to the user's folder
+                for image in images:
+                    image_path = os.path.join(user_folder, image.name)
+                    image.save(image_path, image.file)
+                
+                # Update the user's picture if images were provided
+                if images:
+                    random_image = random.choice(images)
+                    user.picture = random_image
+                    user.save()
+                
+                # Update the pickle file with new encodings
+                self.update_pickle(user_folder, images)
+                
+                return Response("Images uploaded and facial data updated successfully", status=status.HTTP_200_OK)
+            except UserEnrolled.DoesNotExist:
+                return Response("User not found", status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['POST'])
-def apple_sign_in(request):
-    # Extract data from the request
-    email = request.data.get('email')
-    first_name = request.data.get('first_name')
-    last_name = request.data.get('last_name')
-    identity_token = request.data.get('identity_token')
+    def update_pickle(self, user_folder, new_images):
+        pickle_file_path = os.path.join(user_folder, 'encodings.pickle')
 
-    # Save the identity_token in session
-    if identity_token:
-        request.session['identity_token'] = identity_token
+        # Load existing encodings if the pickle file exists
+        known_encodings = []
+        known_names = []
+        if os.path.exists(pickle_file_path):
+            with open(pickle_file_path, 'rb') as f:
+                data = pickle.load(f)
+                known_encodings = data['encodings']
+                known_names = data['names']
 
-    if not email:
-        # Handle the case where email is not provided (second login case)
-        # Look up the user by their identity token (stored in the session)
-        identity_token = request.session.get('identity_token')
-        if not identity_token:
-            return Response({'error': 'Identity token not found in session'}, status=status.HTTP_400_BAD_REQUEST)
+        # Process new images
+        for image in new_images:
+            image_path = os.path.join(user_folder, image.name)
+            
+            image = cv2.imread(image_path)
+            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        try:
-            user = UserEnrolled.objects.get(password=identity_token)
-            return Response({'message': 'Login successful', 'user_id': user.sr}, status=status.HTTP_200_OK)
-        except UserEnrolled.DoesNotExist:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-    else:
-        # Generate a random password using Django's built-in utility
-        random_password = generate_random_password()
+            boxes = face_recognition.face_locations(rgb, model="hog")
+            encodings = face_recognition.face_encodings(rgb, boxes)
 
-        # Check if the user already exists or create a new user
-        user, created = UserEnrolled.objects.get_or_create(
-            email=email,
-            defaults={
-                'name': f"{first_name} {last_name}",
-                'password': make_password(random_password)  # Store the hashed random password
-            }
-        )
+            print(f"Found {len(encodings)} face(s) in {image_path}")
 
-        if created:
-            # If the user is created, store any additional information if needed
-            user.save()
-            return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
-        else:
-            # User already exists
-            return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
-"
+            for encoding in encodings:
+                known_encodings.append(encoding)
+                known_names.append(user.name)  # Assuming user.name is the name you want to associate with the encodings
+
+        # Update the pickle file with new encodings
+        data = {"encodings": known_encodings, "names": known_names}
+        with open(pickle_file_path, 'wb') as f:
+            pickle.dump(data, f)
+
+        print('--> encodings finalized')

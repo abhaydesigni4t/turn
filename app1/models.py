@@ -83,6 +83,7 @@ class UserEnrolled(models.Model):
     email = models.EmailField()
     password = models.CharField(max_length=50)
     site = models.ForeignKey('Site', on_delete=models.CASCADE, blank=True, null=True)
+    identity_token = models.CharField(max_length=255, blank=True, null=True)  # Add this field
 
     def __str__(self):
         return self.name

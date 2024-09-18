@@ -3289,6 +3289,7 @@ def generate_random_password(length=12):
     """Generate a random password."""
     return get_random_string(length)
 
+
 @api_view(['POST'])
 def apple_sign_in(request):
     # Extract data from the request
@@ -3297,37 +3298,88 @@ def apple_sign_in(request):
     last_name = request.data.get('last_name')
     identity_token = request.data.get('identity_token')
 
-    if identity_token:
-        request.session['identity_token'] = identity_token
+    # Check if email and identity_token are provided
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if not identity_token:
+        return Response({'error': 'Identity token is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-    if email:
-        # Generate a random password using Django's built-in utility
-        random_password = generate_random_password()
+    # Generate a random password using Django's built-in utility
+    random_password = generate_random_password()
 
-        # Check if the user already exists or create a new user
-        user, created = UserEnrolled.objects.get_or_create(
-            email=email,
-            defaults={
-                'name': f"{first_name} {last_name}",
-                'password': make_password(random_password)  # Store the hashed random password
-            }
-        )
+    # Check if the user already exists or create a new user
+    user, created = UserEnrolled.objects.get_or_create(
+        email=email,
+        defaults={
+            'name': f"{first_name} {last_name}",
+            'password': make_password(random_password),  # Store the hashed random password
+            'identity_token': identity_token  # Store the identity token for future logins
+        }
+    )
 
-        if created:
-            # If the user is created, save additional information if needed
-            user.save()
-            return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
-        else:
-            # User already exists
-            return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
+    if created:
+        # If the user is created, save additional information if needed
+        user.save()
+        return Response({'message': 'User registered successfully', 'identity_token': identity_token}, status=status.HTTP_201_CREATED)
     else:
-        # Handle the case where email is not provided
-        identity_token = request.session.get('identity_token')
-        if not identity_token:
-            return Response({'error': 'Identity token not found in session'}, status=status.HTTP_400_BAD_REQUEST)
+        # User already exists, update the identity_token if necessary
+        user.identity_token = identity_token
+        user.save()
+        return Response({'message': 'Login successful', 'identity_token': identity_token}, status=status.HTTP_200_OK)
 
-        try:
-            user = UserEnrolled.objects.get(password=identity_token)
-            return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
-        except UserEnrolled.DoesNotExist:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    # Handle the case where email is not provided but identity_token is given
+    try:
+        user = UserEnrolled.objects.get(identity_token=identity_token)
+        return Response({'message': 'Login successful', 'identity_token': identity_token}, status=status.HTTP_200_OK)
+    except UserEnrolled.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# from django.contrib.auth.hashers import make_password
+# from rest_framework.decorators import api_view
+# from rest_framework.response import Response
+# from rest_framework import status
+# from .models import UserEnrolled  # Import your UserEnrolled model
+
+# @api_view(['POST'])
+# def apple_sign_in(request):
+#     # Extract data from the request
+#     email = request.data.get('email')
+#     first_name = request.data.get('first_name')
+#     last_name = request.data.get('last_name')
+#     identity_token = request.data.get('identity_token')
+
+#     # Check if identity token is provided
+#     if identity_token:
+#         request.session['identity_token'] = identity_token
+
+#     # Check if email is provided
+#     if email:
+#         # Check if user already exists
+#         user, created = UserEnrolled.objects.get_or_create(
+#             email=email,
+#             defaults={
+#                 'name': f"{first_name} {last_name}",
+#                 'password': make_password(identity_token)  # Store the hashed identity token
+#             }
+#         )
+
+#         if created:
+#             # User was created successfully
+#             return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
+#         else:
+#             # User already exists, log them in
+#             return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
+
+#     # Handle the case where email is not provided
+#     identity_token = request.session.get('identity_token')
+#     if not identity_token:
+#         return Response({'error': 'Identity token not found in session'}, status=status.HTTP_400_BAD_REQUEST)
+
+#     try:
+#         # Attempt to find the user with the hashed identity token
+#         user = UserEnrolled.objects.get(password=identity_token)
+#         return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
+#     except UserEnrolled.DoesNotExist:
+#         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
