@@ -24,3 +24,73 @@ we have google.html file write render function to render html file
 
 ***************************888
 
+for this api i post data using postman like this "{
+    "identity_token": "001644.e56a6538ed9042ea9a08451676f91573.1258",
+    "first_name": "jon9",
+    "last_name": "watson",
+    "email": "jon9@assure-tech.online"
+    
+}" but this api i use for save user in userenrolled model user login using apple using flutter app 
+so after login with apple flutter app give response like this 
+"(001644.e56a6538ed9042ea9a08451676f91573.1258, isaac, feuerwerger, support@assure-tech.online, [identityToken set: true], null)"
+"flutter: AuthorizationCredentialAppleID(001644.e56a6538ed9042ea9a08451676f91573.1258, isaac, feuerwerger, support@assure-tech.online, [identityToken set: true], null)
+" like 2 ways so i wanted to save identity_token,fisrt_name,last_name and email in my model 
+so i created this api check this api correct or not 
+
+"from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
+from django.utils.crypto import get_random_string
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .models import UserEnrolled
+
+def generate_random_password(length=12):
+    """Generate a random password."""
+    return get_random_string(length)
+
+@api_view(['POST'])
+def apple_sign_in(request):
+    # Extract data from the request
+    email = request.data.get('email')
+    first_name = request.data.get('first_name')
+    last_name = request.data.get('last_name')
+    identity_token = request.data.get('identity_token')
+
+    # Save the identity_token in session
+    if identity_token:
+        request.session['identity_token'] = identity_token
+
+    if not email:
+        # Handle the case where email is not provided (second login case)
+        # Look up the user by their identity token (stored in the session)
+        identity_token = request.session.get('identity_token')
+        if not identity_token:
+            return Response({'error': 'Identity token not found in session'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = UserEnrolled.objects.get(password=identity_token)
+            return Response({'message': 'Login successful', 'user_id': user.sr}, status=status.HTTP_200_OK)
+        except UserEnrolled.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        # Generate a random password using Django's built-in utility
+        random_password = generate_random_password()
+
+        # Check if the user already exists or create a new user
+        user, created = UserEnrolled.objects.get_or_create(
+            email=email,
+            defaults={
+                'name': f"{first_name} {last_name}",
+                'password': make_password(random_password)  # Store the hashed random password
+            }
+        )
+
+        if created:
+            # If the user is created, store any additional information if needed
+            user.save()
+            return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
+        else:
+            # User already exists
+            return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
+"
