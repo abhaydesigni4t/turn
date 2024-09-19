@@ -146,7 +146,11 @@ urlpatterns = [
     #path('google_login/', views.google_login_view, name='google-login'),
     path('google/', GoogleLoginAPIView.as_view(), name='google'),
     path('google_login/',views.google_login_or_register,name='google_login'),
-    path('apple_login/',views.apple_sign_in,name='apple_login'),
+    path('apple_login/',views.apple_sign_in,name='apple_login'), 
+    path('apple_check/',views.check_user,name='apple_check'),
+    path('apple_create/',views.create_user,name='apple_create'),
+
+
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

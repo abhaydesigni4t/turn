@@ -1642,10 +1642,28 @@ class UserProfileCreateAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 def show_facial_data_images(request, user_id):
-    user = get_object_or_404(UserEnrolled, pk=user_id)
-    user_folder = os.path.join('media', 'facial_data', user.get_folder_name())
+    # Get site_name from GET parameters or session
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+
+    # Filter sites based on user permissions
+    user = request.user
+    if user.is_staff and not user.is_superuser:
+        # If the user is a sub-admin, get the sites associated with them
+        sites = user.sites.all()
+    else:
+        # If the user is a super admin, get all sites
+        sites = Site.objects.all()
+
+    # Retrieve the UserEnrolled object by user_id
+    enrolled_user = get_object_or_404(UserEnrolled, pk=user_id)
+
+    # Construct the user folder path for facial data
+    user_folder = os.path.join('media', 'facial_data', enrolled_user.get_folder_name())
     facial_data_images = []
 
+    # Check if the folder exists and retrieve the images
     if os.path.exists(user_folder):
         for filename in os.listdir(user_folder):
             if filename.endswith(('.jpeg', '.jpg', '.png')):
@@ -1655,7 +1673,17 @@ def show_facial_data_images(request, user_id):
                     'user_id': user_id,
                 })
 
-    return render(request, 'app1/facial_data_images.html', {'facial_data_images': facial_data_images, 'user_id': user_id})
+    # Prepare the list of site names for the dropdown
+    site_names = [(site.name, site.name) for site in sites]
+
+    # Render the template with facial data images and site names
+    return render(request, 'app1/facial_data_images.html', {
+        'facial_data_images': facial_data_images,
+        'user_id': user_id,
+        'site_names': site_names,
+        'site_name': site_name,
+    })
+
 
 class OrientationCreateView(APIView):
     def post(self, request, *args, **kwargs):
@@ -1812,6 +1840,22 @@ def update_pickle(user_folder):
 import random
         
 def upload_facial_data_image(request, user_id):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+
+    # Filter sites based on user permissions
+    user = request.user
+    if user.is_staff and not user.is_superuser:
+        # If the user is a sub-admin, get the sites associated with them
+        sites = user.sites.all()
+    else:
+        # If the user is a super admin, get all sites
+        sites = Site.objects.all()
+
+    # Prepare the list of site names for the dropdown
+    site_names = [(site.name, site.name) for site in sites]
+    
     user = get_object_or_404(UserEnrolled, pk=user_id)
     user_folder = os.path.join('media', 'facial_data', user.get_folder_name())
     os.makedirs(user_folder, exist_ok=True)
@@ -1851,7 +1895,9 @@ def upload_facial_data_image(request, user_id):
 
     return render(request, 'app1/upload_facial_data_image.html', {
         'form': form,
-        'user_id': user_id
+        'user_id': user_id,
+         'site_names': site_names,  # Add the site dropdown to the template context
+        'site_name': site_name  # Pass the current selected site name
     })
     
 from .models import OnSiteUser
@@ -1984,7 +2030,7 @@ class DeleteFacialDataImage(APIView):
         else:
             return Response("Image not found", status=status.HTTP_404_NOT_FOUND)
 
-import pickle
+
 from imutils import paths
 import face_recognition
 import pickle
@@ -3278,64 +3324,6 @@ def google_login_or_register(request):
 
 
 
-from django.contrib.auth.hashers import make_password
-from django.utils.crypto import get_random_string
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from .models import UserEnrolled
-
-def generate_random_password(length=12):
-    """Generate a random password."""
-    return get_random_string(length)
-
-
-@api_view(['POST'])
-def apple_sign_in(request):
-    # Extract data from the request
-    email = request.data.get('email')
-    first_name = request.data.get('first_name')
-    last_name = request.data.get('last_name')
-    identity_token = request.data.get('identity_token')
-
-    # Check if email and identity_token are provided
-    if not email:
-        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    if not identity_token:
-        return Response({'error': 'Identity token is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Generate a random password using Django's built-in utility
-    random_password = generate_random_password()
-
-    # Check if the user already exists or create a new user
-    user, created = UserEnrolled.objects.get_or_create(
-        email=email,
-        defaults={
-            'name': f"{first_name} {last_name}",
-            'password': make_password(random_password),  # Store the hashed random password
-            'identity_token': identity_token  # Store the identity token for future logins
-        }
-    )
-
-    if created:
-        # If the user is created, save additional information if needed
-        user.save()
-        return Response({'message': 'User registered successfully', 'identity_token': identity_token}, status=status.HTTP_201_CREATED)
-    else:
-        # User already exists, update the identity_token if necessary
-        user.identity_token = identity_token
-        user.save()
-        return Response({'message': 'Login successful', 'identity_token': identity_token}, status=status.HTTP_200_OK)
-
-    # Handle the case where email is not provided but identity_token is given
-    try:
-        user = UserEnrolled.objects.get(identity_token=identity_token)
-        return Response({'message': 'Login successful', 'identity_token': identity_token}, status=status.HTTP_200_OK)
-    except UserEnrolled.DoesNotExist:
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-
-
 # from django.contrib.auth.hashers import make_password
 # from rest_framework.decorators import api_view
 # from rest_framework.response import Response
@@ -3383,3 +3371,92 @@ def apple_sign_in(request):
 #         return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
 #     except UserEnrolled.DoesNotExist:
 #         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+from django.contrib.auth.hashers import make_password
+from django.utils.crypto import get_random_string
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .models import UserEnrolled
+
+def generate_random_password(length=12):
+    """Generate a random password."""
+    return get_random_string(length)
+
+
+@api_view(['POST'])
+def apple_sign_in(request):
+    # Extract data from the request
+    email = request.data.get('email')
+    first_name = request.data.get('first_name')
+    last_name = request.data.get('last_name')
+    identity_token = request.headers.get('Authorization', '').split(' ')[1]  # Extract identity token from Bearer token
+
+    # Check if identity_token is provided
+    if not identity_token:
+        return Response({'error': 'Identity token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Handle first login with email
+    if email:
+        user, created = UserEnrolled.objects.get_or_create(
+            email=email,
+            defaults={
+                'name': f"{first_name} {last_name}",
+                'password': make_password(generate_random_password()),
+                'identity_token': identity_token,
+            }
+        )
+        if created:
+            return Response({'message': 'User registered successfully', 'identity_token': identity_token}, status=status.HTTP_201_CREATED)
+        else:
+            # Update identity token for existing user
+            user.identity_token = identity_token
+            user.save()
+            return Response({'message': 'Login successful', 'identity_token': identity_token}, status=status.HTTP_200_OK)
+    else:
+        # Handle subsequent login without email
+        try:
+            user = UserEnrolled.objects.get(identity_token=identity_token)
+            return Response({'message': 'Login successful', 'identity_token': identity_token}, status=status.HTTP_200_OK)
+        except UserEnrolled.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt
+def check_user(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        userIdentifier = data.get('userIdentifier')
+
+        # Check if the user exists in the database
+        user_exists = UserEnrolled.objects.filter(apple_user_id=userIdentifier).exists()
+
+        return JsonResponse({'exists': user_exists})
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+@csrf_exempt
+def create_user(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        userIdentifier = data.get('userIdentifier')
+        first_name = data.get('first_name')
+        family_name = data.get('family_name')
+        email = data.get('email')
+
+        # Create a new user in the database
+        user = UserEnrolled.objects.create(
+            apple_user_id=userIdentifier,
+            first_name=first_name,
+            last_name=family_name,
+            email=email
+        )
+
+        return JsonResponse({'message': 'User created successfully'})
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
