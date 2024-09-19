@@ -84,6 +84,11 @@ class UserEnrolled(models.Model):
     password = models.CharField(max_length=50)
     site = models.ForeignKey('Site', on_delete=models.CASCADE, blank=True, null=True)
     identity_token = models.CharField(max_length=255, blank=True, null=True)  # Add this field
+    first_name = models.CharField(max_length=100, blank=True, null=True)  # Add this field
+    last_name = models.CharField(max_length=100, blank=True, null=True)   # Add this field
+    userIdentifier = models.CharField(max_length=255, blank=True, null=True) 
+    family_name = models.CharField(max_length=100, blank=True, null=True)
+    
 
     def __str__(self):
         return self.name

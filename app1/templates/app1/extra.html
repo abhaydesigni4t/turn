@@ -14,41 +14,21 @@ and check pagination code sort all data this code sort current page data only
 when i go to next page then it not return next sorted data it return constant data that belong to that page
 
 we have google.html file write render function to render html file 
-*********************
 
 
-
-
-
-
-
-***************************888
-check this api if i post 15 images first time then it post 15 images successfully 
-like shows in terminal like this Found 1 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\michael-dam-mEZ3PoFGs_k-unsplash.jpg
---> processing image 14/15
-Found 0 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\sub-admin-sites.png
---> processing image 15/15
-Found 0 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\WhatsApp_Image_2024-06-04_at_11.41.39_AM_8.jpeg
-
-but after i again post 15 images so it look like this in terminal 
-Found 1 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\michael-dam-mEZ3PoFGs_k-unsplash_P8ae3Z8.jpg
---> processing image 27/30
-Found 0 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\sub-admin-sites.png
---> processing image 28/30
-Found 0 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\sub-admin-sites_SnDGbxe.png
---> processing image 29/30
-Found 0 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\WhatsApp_Image_2024-06-04_at_11.41.39_AM_8.jpeg
---> processing image 30/30
-Found 0 face(s) in C:\Users\qccs\Desktop\Turnstile\media\facial_data\danish\WhatsApp_Image_2024-06-04_at_11.41.39_AM_8_Y1t3Fmd.jpeg
---> encodings finalized
-i think again it post 30 images first 15 and 15 images now i give total 30 images and it increase 45,55 like this
-if i give 15 images then only post 15 not post including previous ones
-this is api "import pickle
-from imutils import paths
-import face_recognition
 import pickle
+import os
+import random
 import cv2
+import face_recognition
+from imutils import paths
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.conf import settings
 from .serializers import FacialImageDataSerializer
+from .models import UserEnrolled
+
 
 class FacialDataApi(APIView):
     def post(self, request):
@@ -56,38 +36,53 @@ class FacialDataApi(APIView):
         if serializer.is_valid():
             email = serializer.validated_data['email']
             images = serializer.validated_data['facial_data']
+            uploaded_image_paths = []  # Store paths of new images
+
             try:
                 user = UserEnrolled.objects.get(email=email)
+                user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name))
+                os.makedirs(user_folder, exist_ok=True)  # Ensure the folder exists
+                
                 for image in images:
-                    user.facial_data = image
+                    # Save each image to the user's folder
+                    image_path = os.path.join(user_folder, image.name)
+                    with open(image_path, 'wb') as img_file:
+                        for chunk in image.chunks():
+                            img_file.write(chunk)
+                    uploaded_image_paths.append(image_path)  # Track the uploaded image paths
+
+                if uploaded_image_paths:
+                    # Set one of the newly uploaded images as the user's picture
+                    random_image = random.choice(uploaded_image_paths)
+                    user.picture = os.path.basename(random_image)
                     user.save()
-                    
-                if images:
-                    random_image = random.choice(images)
-                    user.picture = random_image
-                    user.save()
-                    
+
             except UserEnrolled.DoesNotExist:
                 return Response("User not found", status=status.HTTP_404_NOT_FOUND)
-            user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name))
-            self.update_pickle(user_folder)
+
+            # Pass only the new images to be processed for facial recognition
+            self.update_pickle(uploaded_image_paths)
 
             return Response("Images uploaded and facial data updated successfully", status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def update_pickle(self, user_folder):
-        pickle_file_path = os.path.join(user_folder, 'encodings.pickle')
+    def update_pickle(self, uploaded_image_paths):
+        if not uploaded_image_paths:
+            print("No new images to process.")
+            return
 
-        imagePaths = list(paths.list_images(user_folder))
+        # Assume all images are saved in the same user folder
+        user_folder = os.path.dirname(uploaded_image_paths[0])
+        pickle_file_path = os.path.join(user_folder, 'encodings.pickle')
 
         knownEncodings = []
         knownNames = []
 
-        print(f"Total images found: {len(imagePaths)}")
+        print(f"New images to process: {len(uploaded_image_paths)}")
 
-        for (i, imagePath) in enumerate(imagePaths):
-            print(f"--> processing image {i + 1}/{len(imagePaths)}")
+        for (i, imagePath) in enumerate(uploaded_image_paths):
+            print(f"--> processing image {i + 1}/{len(uploaded_image_paths)}")
             name = os.path.basename(os.path.dirname(imagePath))
 
             image = cv2.imread(imagePath)
@@ -102,93 +97,68 @@ class FacialDataApi(APIView):
                 knownEncodings.append(encoding)
                 knownNames.append(name)
 
-        #print('--> encodings:', knownEncodings)
-        # print('--> names:', knownNames)
+        # Load existing encodings if the file exists
+        if os.path.exists(pickle_file_path):
+            with open(pickle_file_path, 'rb') as f:
+                data = pickle.load(f)
+            knownEncodings.extend(data['encodings'])
+            knownNames.extend(data['names'])
 
+        # Save the updated encodings and names
         data = {"encodings": knownEncodings, "names": knownNames}
         with open(pickle_file_path, 'wb') as f:
             pickle.dump(data, f)
 
-        print('--> encodings finalized') 
-        "
-this is seralizer "class FacialImageDataSerializer(serializers.Serializer):
-email = serializers.EmailField()
-facial_data = serializers.ListField(child=serializers.ImageField())"
+        print('--> encodings finalized')
+
+*********************
+
+
 
 
 
 ****************
 
 
-import pickle
-from imutils import paths
-import face_recognition
-import cv2
-from django.conf import settings
-from rest_framework.response import Response
-from rest_framework import status
-from .serializers import FacialImageDataSerializer
+i have one flutter app in which i have use apple signage without firebase now i want to store my 
+credentail in my django db for that i need apple sign in api using drf on the very first time i got 
+(001644.e56a6538ed9042ea9a08451676f91573.1258, isaac, feuerwerger, support@assure-tech.online, [identityToken set: true], null) 
+this after every time i got (001644.e56a6538ed9042ea9a08451676f91573.1258, null, null, null, [identityToken set: true], null) 
+i want to store in this model "class UserEnrolled(models.Model):
+sr = models.AutoField(primary_key=True, unique=True)
+picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
+name = models.CharField(max_length=255)
+company_name = models.CharField(max_length=100)
+job_role = models.CharField(max_length=100)
+mycompany_id = models.CharField(max_length=10)  # this is SST ID
+tag_id = models.CharField(max_length=50,blank=True, null=True)
+job_location = models.CharField(max_length=100)
+orientation = models.FileField(upload_to='attachments/', blank=True, null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
+facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
+my_comply = models.ImageField(upload_to='compliance_images/', blank=True, null=True) # this is SST
+expiry_date = models.DateField(blank=True, null=True)
+status = models.CharField(max_length=100, choices=[
+    ('active', 'Active'),
+    ('inactive', 'Inactive'),
+    ('pending', 'Pending'),
+], default='pending')
+email = models.EmailField()
+password = models.CharField(max_length=50)
+site = models.ForeignKey('Site', on_delete=models.CASCADE, blank=True, null=True)
+identity_token = models.CharField(max_length=255, blank=True, null=True)  # Add this field
 
-class FacialDataApi(APIView):
-    def post(self, request):
-        serializer = FacialImageDataSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            images = serializer.validated_data['facial_data']
-            try:
-                user = UserEnrolled.objects.get(email=email)
-                user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name))
-                
-                # Save new images to the user's folder
-                for image in images:
-                    image_path = os.path.join(user_folder, image.name)
-                    image.save(image_path, image.file)
-                
-                # Update the user's picture if images were provided
-                if images:
-                    random_image = random.choice(images)
-                    user.picture = random_image
-                    user.save()
-                
-                # Update the pickle file with new encodings
-                self.update_pickle(user_folder, images)
-                
-                return Response("Images uploaded and facial data updated successfully", status=status.HTTP_200_OK)
-            except UserEnrolled.DoesNotExist:
-                return Response("User not found", status=status.HTTP_404_NOT_FOUND)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+def __str__(self):
+    return self.name
 
-    def update_pickle(self, user_folder, new_images):
-        pickle_file_path = os.path.join(user_folder, 'encodings.pickle')
+def get_folder_name(self):
+    return self.name
 
-        # Load existing encodings if the pickle file exists
-        known_encodings = []
-        known_names = []
-        if os.path.exists(pickle_file_path):
-            with open(pickle_file_path, 'rb') as f:
-                data = pickle.load(f)
-                known_encodings = data['encodings']
-                known_names = data['names']
+def set_password(self, raw_password):
+    self.password = make_password(raw_password)
 
-        # Process new images
-        for image in new_images:
-            image_path = os.path.join(user_folder, image.name)
-            
-            image = cv2.imread(image_path)
-            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+def check_password(self, raw_password):
+    return check_password(raw_password, self.password)"
 
-            boxes = face_recognition.face_locations(rgb, model="hog")
-            encodings = face_recognition.face_encodings(rgb, boxes)
 
-            print(f"Found {len(encodings)} face(s) in {image_path}")
 
-            for encoding in encodings:
-                known_encodings.append(encoding)
-                known_names.append(user.name)  # Assuming user.name is the name you want to associate with the encodings
-
-        # Update the pickle file with new encodings
-        data = {"encodings": known_encodings, "names": known_names}
-        with open(pickle_file_path, 'wb') as f:
-            pickle.dump(data, f)
-
-        print('--> encodings finalized')
+no userIdentifier,first_name,family_name add this

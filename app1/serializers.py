@@ -796,3 +796,34 @@ class NotTagUserSerializer(serializers.ModelSerializer):
         
     
     
+class AppleUserEnrolledSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserEnrolled
+        fields = [
+            'name',
+            'email',
+            'password',
+            'identity_token',
+        ]
+        read_only_fields = ['sr']  # AutoField should be read-only
+
+    def create(self, validated_data):
+        # Create a new user instance
+        user = UserEnrolled(
+            name=validated_data.get('name'),
+            email=validated_data.get('email'),
+            identity_token=validated_data.get('identity_token'),
+            # Set other fields as needed
+        )
+        user.set_password(validated_data.get('password', 'default_password'))  # Set a default password if not provided
+        user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        # Update an existing user instance
+        instance.name = validated_data.get('name', instance.name)
+        instance.email = validated_data.get('email', instance.email)
+        instance.identity_token = validated_data.get('identity_token', instance.identity_token)
+        # Update other fields as needed
+        instance.save()
+        return instance
