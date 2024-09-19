@@ -3427,6 +3427,7 @@ def apple_sign_in(request):
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from .models import UserEnrolled
 
 @csrf_exempt
 def check_user(request):
@@ -3434,11 +3435,16 @@ def check_user(request):
         data = json.loads(request.body)
         userIdentifier = data.get('userIdentifier')
 
-        # Check if the user exists in the database
-        user_exists = UserEnrolled.objects.filter(apple_user_id=userIdentifier).exists()
+        # Check if the user exists in the database and get the user details
+        user = UserEnrolled.objects.filter(userIdentifier=userIdentifier).first()
 
-        return JsonResponse({'exists': user_exists})
+        if user:
+            return JsonResponse({'exists': True, 'email': user.email})
+        else:
+            return JsonResponse({'exists': False, 'email': None})
+    
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
 
 
 @csrf_exempt
@@ -3447,16 +3453,17 @@ def create_user(request):
         data = json.loads(request.body)
         userIdentifier = data.get('userIdentifier')
         first_name = data.get('first_name')
-        family_name = data.get('family_name')
+        family_name = data.get('family_name', '')  # Default to an empty string if family_name is not provided
         email = data.get('email')
 
         # Create a new user in the database
         user = UserEnrolled.objects.create(
-            apple_user_id=userIdentifier,
+            userIdentifier=userIdentifier,
             first_name=first_name,
             last_name=family_name,
             email=email
         )
 
-        return JsonResponse({'message': 'User created successfully'})
+        return JsonResponse({'message': 'User created successfully', 'email': user.email})
+    
     return JsonResponse({'error': 'Invalid request method'}, status=400)
