@@ -162,3 +162,30 @@ def check_password(self, raw_password):
 
 
 no userIdentifier,first_name,family_name add this
+
+
+
+
+modify this api "@csrf_exempt
+def create_user(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        userIdentifier = data.get('userIdentifier')
+        first_name = data.get('first_name')
+        family_name = data.get('family_name', '')  # Default to an empty string if family_name is not provided
+        email = data.get('email')
+
+        # Create a new user in the database
+        user = UserEnrolled.objects.create(
+            userIdentifier=userIdentifier,
+            first_name=first_name,
+            last_name=family_name,
+            email=email
+        )
+
+        return JsonResponse({'message': 'User created successfully', 'email': user.email})
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+" it created same user multiple time in db if user create first time then give response 
+User created successfully if second time it use same email then give response login susseccfully 
+not save multiple time in db

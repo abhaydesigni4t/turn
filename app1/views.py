@@ -3447,6 +3447,33 @@ def check_user(request):
 
 
 
+# @csrf_exempt
+# def create_user(request):
+#     if request.method == 'POST':
+#         data = json.loads(request.body)
+#         userIdentifier = data.get('userIdentifier')
+#         first_name = data.get('first_name')
+#         family_name = data.get('family_name', '')  # Default to an empty string if family_name is not provided
+#         email = data.get('email')
+
+#         # Create a new user in the database
+#         user = UserEnrolled.objects.create(
+#             userIdentifier=userIdentifier,
+#             first_name=first_name,
+#             last_name=family_name,
+#             email=email
+#         )
+
+#         return JsonResponse({'message': 'User created successfully', 'email': user.email})
+    
+#     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import UserEnrolled
+import json
+
 @csrf_exempt
 def create_user(request):
     if request.method == 'POST':
@@ -3456,14 +3483,19 @@ def create_user(request):
         family_name = data.get('family_name', '')  # Default to an empty string if family_name is not provided
         email = data.get('email')
 
-        # Create a new user in the database
-        user = UserEnrolled.objects.create(
-            userIdentifier=userIdentifier,
-            first_name=first_name,
-            last_name=family_name,
-            email=email
-        )
-
-        return JsonResponse({'message': 'User created successfully', 'email': user.email})
+        # Check if a user with the same email already exists
+        try:
+            user = UserEnrolled.objects.get(email=email)
+            # User already exists, return a "Login successfully" message
+            return JsonResponse({'message': 'Login successfully', 'email': user.email})
+        except UserEnrolled.DoesNotExist:
+            # Create a new user in the database
+            user = UserEnrolled.objects.create(
+                userIdentifier=userIdentifier,
+                first_name=first_name,
+                last_name=family_name,
+                email=email
+            )
+            return JsonResponse({'message': 'User created successfully', 'email': user.email})
     
     return JsonResponse({'error': 'Invalid request method'}, status=400)
