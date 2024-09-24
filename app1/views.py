@@ -3535,51 +3535,6 @@ def create_user(request):
 
 
 
-   
-        
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.core.mail import send_mail
-from django.utils.crypto import get_random_string
-from .models import UserEnrolled
-from .serializers import ForgotPasswordSerializer, ResetPasswordSerializer
-
-class ForgotPasswordView(APIView):
-    def post(self, request):
-        serializer = ForgotPasswordSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            token = get_random_string(length=32)  # Generate a unique token
-            try:
-                user = UserEnrolled.objects.get(email=email)
-                user.identity_token = token  # Save the token to the user model
-                user.save(update_fields=['identity_token'])  # Save only the identity_token field
-
-                # Send password reset email
-                send_mail(
-                    'Password Reset Request',
-                    f'Here is your password reset token: {token}',
-                    'noreply@example.com',
-                    [email],
-                    fail_silently=False,
-                )
-                return Response({'message': 'Password reset token sent to your email.'}, status=status.HTTP_200_OK)
-            except UserEnrolled.DoesNotExist:
-                return Response({'error': 'No user found with this email.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class PasswordResetAPIView(APIView):
-    def post(self, request):
-        serializer = ResetPasswordSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'Password reset successfully.'}, status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    
     
 from django.core.mail import send_mail
 from django.core.cache import cache
@@ -3669,14 +3624,5 @@ def reset_password(request):
         return Response({'error': 'Invalid or expired OTP'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-from .serializers import LoginSerializerApp55
 
-class LoginAPIApp55(APIView):
-    def post(self, request, format=None):
-        serializer = LoginSerializerApp55(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            user = UserEnrolled.objects.get(email=email)
-            name = user.name
-            return Response({'message': 'Login successful', 'name': name}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
