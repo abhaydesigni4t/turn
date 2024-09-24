@@ -1904,6 +1904,9 @@ from .models import OnSiteUser
 
 def onsite_user(request):
     site_name = request.GET.get('site_name') or request.session.get('site_name')
+    filter_name = request.GET.get('filterName', '').lower()  # Get name filter from request
+    filter_date = request.GET.get('filterDate', '')  # Get date filter from request
+
     if site_name:
         request.session['site_name'] = site_name
 
@@ -1913,35 +1916,43 @@ def onsite_user(request):
         try:
             site = Site.objects.get(name=site_name)
             queryset = queryset.filter(site=site)
-            print(f"Site found: {site.name}")  # Debugging print statement
         except Site.DoesNotExist:
             queryset = OnSiteUser.objects.none()
-            print(f"Site not found: {site_name}")  # Debugging print statement
 
-    paginator = Paginator(queryset, 3)  # 10 items per page
+    # Apply name filter if provided
+    if filter_name:
+        queryset = queryset.filter(name__icontains=filter_name)
+    
+    # Apply date filter if provided
+    if filter_date:
+        queryset = queryset.filter(timestamp__date=filter_date)  # Assuming 'timestamp' is the field storing the datetime
+
+    paginator = Paginator(queryset, 3)  # Paginate with 3 items per page
     page_number = request.GET.get('page')
     on_site_users = paginator.get_page(page_number)
 
-    # Convert face field from boolean to 0/1 before passing to template
+    # Convert face field from boolean to 0/1
     for user in on_site_users:
         user.face = 1 if user.face else 0
 
     # Filter sites based on user permissions
     user = request.user
     if user.is_staff and not user.is_superuser:
-        # If the user is a sub-admin, get the sites associated with them
         sites = user.sites.all()
     else:
-        # If the user is a super admin, get all sites
         sites = Site.objects.all()
 
     site_names = [(site.name, site.name) for site in sites]
+
     return render(request, 'app1/onsite_user.html', {
         'on_site_users': on_site_users,
         'sites': sites,
         'site_name': site_name,
-        'site_names': site_names
+        'site_names': site_names,
+        'filter_name': filter_name,
+        'filter_date': filter_date,  # Pass filters back to the template
     })
+
 
 def delete_selected5(request):
     if request.method == 'POST':
@@ -3499,3 +3510,173 @@ def create_user(request):
             return JsonResponse({'message': 'User created successfully', 'email': user.email})
     
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+
+
+# from django.core.mail import send_mail
+# from django.utils.crypto import get_random_string
+
+# class ForgotPasswordView(View):
+#     def post(self, request):
+#         form = ForgotPasswordForm(request.POST)
+#         if form.is_valid():
+#             email = form.cleaned_data['email']
+#             token = get_random_string(length=32)  # Generate a reset token
+#             # Save the token associated with the user in the database
+#             send_mail(
+#                 'Password Reset',
+#                 f'Use this token to reset your password: {token}',
+#                 'from@example.com',
+#                 [email],
+#             )
+#             return JsonResponse({'message': 'Reset link sent!'})
+#         return JsonResponse({'error': 'Invalid email'}, status=400)
+
+
+
+   
+        
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
+from .models import UserEnrolled
+from .serializers import ForgotPasswordSerializer, ResetPasswordSerializer
+
+class ForgotPasswordView(APIView):
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            token = get_random_string(length=32)  # Generate a unique token
+            try:
+                user = UserEnrolled.objects.get(email=email)
+                user.identity_token = token  # Save the token to the user model
+                user.save(update_fields=['identity_token'])  # Save only the identity_token field
+
+                # Send password reset email
+                send_mail(
+                    'Password Reset Request',
+                    f'Here is your password reset token: {token}',
+                    'noreply@example.com',
+                    [email],
+                    fail_silently=False,
+                )
+                return Response({'message': 'Password reset token sent to your email.'}, status=status.HTTP_200_OK)
+            except UserEnrolled.DoesNotExist:
+                return Response({'error': 'No user found with this email.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PasswordResetAPIView(APIView):
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Password reset successfully.'}, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    
+from django.core.mail import send_mail
+from django.core.cache import cache
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
+from django.utils.crypto import get_random_string
+from .models import UserEnrolled
+from django.contrib.auth.hashers import make_password
+
+@api_view(['POST'])
+def send_otp(request):
+    email = request.data.get('email')
+    
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = UserEnrolled.objects.get(email=email)
+        otp = get_random_string(length=6, allowed_chars='1234567890')
+        # Store OTP in cache with a timeout of 10 minutes
+        cache.set(email, otp, timeout=600)
+
+        # Send OTP to user's email
+        subject = 'Password Reset OTP'
+        message = f'Your OTP for password reset is {otp}. It will expire in 10 minutes.'
+        send_mail(subject, message, 'from@example.com', [email], fail_silently=False)
+
+        return Response({'message': 'OTP sent successfully'}, status=status.HTTP_200_OK)
+
+    except UserEnrolled.DoesNotExist:
+        return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    
+    
+    
+@api_view(['POST'])
+def verify_otp(request):
+    email = request.data.get('email')
+    otp = request.data.get('otp')
+
+    if not email or not otp:
+        return Response({'error': 'Email and OTP are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    stored_otp = cache.get(email)
+    if stored_otp and stored_otp == otp:
+        return Response({'message': 'OTP verified successfully'}, status=status.HTTP_200_OK)
+    else:
+        return Response({'error': 'Invalid or expired OTP'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    
+from django.contrib.auth.hashers import make_password
+from django.core.cache import cache
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
+
+
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+@api_view(['POST'])
+def reset_password(request):
+    email = request.data.get('email')
+    new_password = request.data.get('new_password')
+    otp = request.data.get('otp')
+
+    if not email or not new_password or not otp:
+        return Response({'error': 'Email, new password, and OTP are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    stored_otp = cache.get(email)
+    if stored_otp and stored_otp == otp:
+        try:
+            user = UserEnrolled.objects.get(email=email)
+            hashed_password = make_password(new_password)
+            logger.info(f'New hashed password: {hashed_password}')  # Log the hashed password
+            user.password = hashed_password
+            user.save()
+            logger.info(f'Password saved for user: {user.email}')  # Log after saving
+            cache.delete(email)
+            return Response({'message': 'Password reset successfully'}, status=status.HTTP_200_OK)
+        except UserEnrolled.DoesNotExist:
+            return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        return Response({'error': 'Invalid or expired OTP'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+from .serializers import LoginSerializerApp55
+
+class LoginAPIApp55(APIView):
+    def post(self, request, format=None):
+        serializer = LoginSerializerApp55(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            user = UserEnrolled.objects.get(email=email)
+            name = user.name
+            return Response({'message': 'Login successful', 'name': name}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

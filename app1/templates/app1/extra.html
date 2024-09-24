@@ -6,6 +6,11 @@ EE
 Mumbai
 ansar@mail.com
 
+api for forget google password
+
+brlu jnao dbln phia
+
+brlujnaodblnphia
 
 
 make parameter dynamic
@@ -113,18 +118,161 @@ class FacialDataApi(APIView):
 
 *********************
 
+this is view "def onsite_user(request):
+site_name = request.GET.get('site_name') or request.session.get('site_name')
+filter_name = request.GET.get('filterName', '').lower()  # Get name filter from request
+filter_date = request.GET.get('filterDate', '')  # Get date filter from request
+
+if site_name:
+    request.session['site_name'] = site_name
+
+queryset = OnSiteUser.objects.all()
+
+if site_name:
+    try:
+        site = Site.objects.get(name=site_name)
+        queryset = queryset.filter(site=site)
+    except Site.DoesNotExist:
+        queryset = OnSiteUser.objects.none()
+
+# Apply name filter if provided
+if filter_name:
+    queryset = queryset.filter(name__icontains=filter_name)
+
+# Apply date filter if provided
+if filter_date:
+    queryset = queryset.filter(timestamp__date=filter_date)  # Assuming 'timestamp' is the field storing the datetime
+
+paginator = Paginator(queryset, 3)  # Paginate with 3 items per page
+page_number = request.GET.get('page')
+on_site_users = paginator.get_page(page_number)
+
+# Convert face field from boolean to 0/1
+for user in on_site_users:
+    user.face = 1 if user.face else 0
+
+# Filter sites based on user permissions
+user = request.user
+if user.is_staff and not user.is_superuser:
+    sites = user.sites.all()
+else:
+    sites = Site.objects.all()
+
+site_names = [(site.name, site.name) for site in sites]
+
+return render(request, 'app1/onsite_user.html', {
+    'on_site_users': on_site_users,
+    'sites': sites,
+    'site_name': site_name,
+    'site_names': site_names,
+    'filter_name': filter_name,
+    'filter_date': filter_date,  # Pass filters back to the template
+})
+"
+
+this is html "<div class="content">
+    <div id="table-container">
+        <form method="post" action="{% url 'delete_selected5' %}">
+            {% csrf_token %}
+            <div class="filter-container">
+                <input type="text" id="filterName" value="{{ filter_name }}" placeholder="Filter by Name">
+                <input type="date" id="filterDate" value="{{ filter_date }}" placeholder="Filter by Date">
+            </div>
+            <table id="customers">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" onClick="toggleAll(this)"></th>
+                        <th>Name</th>
+                        <th>Tag Id</th>
+                        <th>Status</th>
+                        <th>Face</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in on_site_users %}
+                    <tr data-name="{{ i.name }}" data-timestamp="{{ i.timestamp|date:'Y-m-d H:i:s A' }}">
+                        <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
+                        <td>{{ i.name }}</td>
+                        <td>{{ i.tag_id }}</td>
+                        <td>{{ i.status }}</td>
+                        <td>{{i.face}}</td>
+                        <td>{{ i.timestamp|date:"Y-m-d h:i:s A" }}</td> 
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" class="delete-btn">Delete Selected</button>
+        </form>
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if on_site_users.has_previous %}
+                    <a href="?page=1{% if site_name %}&site_name={{ site_name }}{% endif %}{% if filter_name %}&filterName={{ filter_name }}{% endif %}{% if filter_date %}&filterDate={{ filter_date }}{% endif %}">&laquo; first</a>
+                    <a href="?page={{ on_site_users.previous_page_number }}{% if site_name %}&site_name={{ site_name }}{% endif %}{% if filter_name %}&filterName={{ filter_name }}{% endif %}{% if filter_date %}&filterDate={{ filter_date }}{% endif %}">previous</a>
+                {% endif %}
+        
+                <span class="current">
+                    Page {{ on_site_users.number }} of {{ on_site_users.paginator.num_pages }}.
+                </span>
+        
+                {% if on_site_users.has_next %}
+                    <a href="?page={{ on_site_users.next_page_number }}{% if site_name %}&site_name={{ site_name }}{% endif %}{% if filter_name %}&filterName={{ filter_name }}{% endif %}{% if filter_date %}&filterDate={{ filter_date }}{% endif %}">next</a>
+                    <a href="?page={{ on_site_users.paginator.num_pages }}{% if site_name %}&site_name={{ site_name }}{% endif %}{% if filter_name %}&filterName={{ filter_name }}{% endif %}{% if filter_date %}&filterDate={{ filter_date }}{% endif %}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+        
+        
+    </div>
+</div>
+"
+this is js "<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const nameInput = document.getElementById('filterName');
+        const dateInput = document.getElementById('filterDate');
+        
+        nameInput.addEventListener('input', () => {
+            filterAndSubmit();
+        });
+        dateInput.addEventListener('input', () => {
+            filterAndSubmit();
+        });
+    
+        function filterAndSubmit() {
+            const filterName = nameInput.value;
+            const filterDate = dateInput.value;
+            const queryString = `?filterName=${filterName}&filterDate=${filterDate}`;
+            window.location.href = queryString;  // This will reload the page with the filters applied
+        }
+    });
+    </script>"
 
 
 
+*********************************
 
-****************
 
+see this view "from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
 
-i have one flutter app in which i have use apple signage without firebase now i want to store my 
-credentail in my django db for that i need apple sign in api using drf on the very first time i got 
-(001644.e56a6538ed9042ea9a08451676f91573.1258, isaac, feuerwerger, support@assure-tech.online, [identityToken set: true], null) 
-this after every time i got (001644.e56a6538ed9042ea9a08451676f91573.1258, null, null, null, [identityToken set: true], null) 
-i want to store in this model "class UserEnrolled(models.Model):
+class ForgotPasswordView(View):
+    def post(self, request):
+        form = ForgotPasswordForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            token = get_random_string(length=32)  # Generate a reset token
+            # Save the token associated with the user in the database
+            send_mail(
+                'Password Reset',
+                f'Use this token to reset your password: {token}',
+                'from@example.com',
+                [email],
+            )
+            return JsonResponse({'message': 'Reset link sent!'})
+        return JsonResponse({'error': 'Invalid email'}, status=400)"
+like this i want api using drf to forget password using parameter email 
+this is model "class UserEnrolled(models.Model):
 sr = models.AutoField(primary_key=True, unique=True)
 picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
 name = models.CharField(max_length=255)
@@ -146,9 +294,17 @@ email = models.EmailField()
 password = models.CharField(max_length=50)
 site = models.ForeignKey('Site', on_delete=models.CASCADE, blank=True, null=True)
 identity_token = models.CharField(max_length=255, blank=True, null=True)  # Add this field
+first_name = models.CharField(max_length=100, blank=True, null=True)  # Add this field
+last_name = models.CharField(max_length=100, blank=True, null=True)   # Add this field
+userIdentifier = models.CharField(max_length=255, blank=True, null=True) 
+family_name = models.CharField(max_length=100, blank=True, null=True)
+
 
 def __str__(self):
     return self.name
+
+def __str__(self):
+    return self.first_name
 
 def get_folder_name(self):
     return self.name
@@ -159,33 +315,301 @@ def set_password(self, raw_password):
 def check_password(self, raw_password):
     return check_password(raw_password, self.password)"
 
+this api i used to create user "from django.contrib.auth.hashers import make_password, check_password
+from django.core.validators import FileExtensionValidator
+from django.db import models
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
 
+@api_view(['POST'])
+def google_login_or_register(request):
+    email = request.data.get('email')
+    display_name = request.data.get('display_name')
 
-no userIdentifier,first_name,family_name add this
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-
-
-
-modify this api "@csrf_exempt
-def create_user(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        userIdentifier = data.get('userIdentifier')
-        first_name = data.get('first_name')
-        family_name = data.get('family_name', '')  # Default to an empty string if family_name is not provided
-        email = data.get('email')
-
-        # Create a new user in the database
+    try:
+        # Check if the user already exists in the database
+        user = UserEnrolled.objects.get(email=email)
+        return Response({
+            'message': 'User logged in successfully',
+            'email': user.email,
+        }, status=status.HTTP_200_OK)
+    except UserEnrolled.DoesNotExist:
+        # If user doesn't exist, create a new user
         user = UserEnrolled.objects.create(
-            userIdentifier=userIdentifier,
-            first_name=first_name,
-            last_name=family_name,
-            email=email
+            name=display_name,
+            email=email,
+            password=make_password('default_password'),  # Set a default password or handle it differently
+            # You might need to set other required fields based on your model
         )
+        return Response({
+            'message': 'User registered successfully',
+            'email': user.email,
+        }, status=status.HTTP_201_CREATED)
+"
 
-        return JsonResponse({'message': 'User created successfully', 'email': user.email})
+
+
+RMT3VXSFTUG13JRVU2NUUGHT
+
+
+
+
+**************************************
+when i reset password using forget password token then new_password not save in password field in this model 
+"class UserEnrolled(models.Model):
+sr = models.AutoField(primary_key=True, unique=True)
+picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
+name = models.CharField(max_length=255)
+company_name = models.CharField(max_length=100)
+job_role = models.CharField(max_length=100)
+mycompany_id = models.CharField(max_length=10)  # this is SST ID
+tag_id = models.CharField(max_length=50,blank=True, null=True)
+job_location = models.CharField(max_length=100)
+orientation = models.FileField(upload_to='attachments/', blank=True, null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
+facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
+my_comply = models.ImageField(upload_to='compliance_images/', blank=True, null=True) # this is SST
+expiry_date = models.DateField(blank=True, null=True)
+status = models.CharField(max_length=100, choices=[
+    ('active', 'Active'),
+    ('inactive', 'Inactive'),
+    ('pending', 'Pending'),
+], default='pending')
+email = models.EmailField()
+password = models.CharField(max_length=150)
+site = models.ForeignKey('Site', on_delete=models.CASCADE, blank=True, null=True)
+identity_token = models.CharField(max_length=255, blank=True, null=True)  # Add this field
+first_name = models.CharField(max_length=100, blank=True, null=True)  # Add this field
+last_name = models.CharField(max_length=100, blank=True, null=True)   # Add this field
+userIdentifier = models.CharField(max_length=255, blank=True, null=True) 
+family_name = models.CharField(max_length=100, blank=True, null=True)
+
+
+def __str__(self):
+    return f"{self.name} {self.first_name}"
+
+
+def get_folder_name(self):
+    return self.name
+
+def set_password(self, raw_password):
+    self.password = make_password(raw_password)
+
+def check_password(self, raw_password):
+    return check_password(raw_password, self.password)"
+i use forgot and reset password api 
+"from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
+from .models import UserEnrolled
+from .serializers import ForgotPasswordSerializer, ResetPasswordSerializer
+
+class ForgotPasswordView(APIView):
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            token = get_random_string(length=32)  # Generate a unique token
+            try:
+                user = UserEnrolled.objects.get(email=email)
+                user.identity_token = token  # Save the token to the user model
+                user.save()
+
+                # Send password reset email
+                send_mail(
+                    'Password Reset Request',
+                    f'Here is your password reset token: {token}',
+                    'noreply@example.com',
+                    [email],
+                    fail_silently=False,
+                )
+                return Response({'message': 'Password reset token sent to your email.'}, status=status.HTTP_200_OK)
+            except UserEnrolled.DoesNotExist:
+                return Response({'error': 'No user found with this email.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PasswordResetAPIView(APIView):
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Password reset successfully.'}, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+"
+
+this is serializer "   
+from rest_framework import serializers
+from .models import UserEnrolled
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        try:
+            user = UserEnrolled.objects.get(email=value)
+        except UserEnrolled.DoesNotExist:
+            raise serializers.ValidationError("No user is registered with this email address.")
+        return value
+
+class ResetPasswordSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    new_password = serializers.CharField()
+
+    def validate(self, data):
+        token = data.get('token')
+        try:
+            user = UserEnrolled.objects.get(identity_token=token)
+        except UserEnrolled.DoesNotExist:
+            raise serializers.ValidationError("Invalid or expired token.")
+        
+        data['user'] = user
+        return data
+
+    def save(self):
+        user = self.validated_data['user']
+        user.set_password(self.validated_data['new_password'])  # Hash and set the new password
+        user.identity_token = None  # Clear the token after successful password reset
+        user.save()  # Save the user with the new password
+"
+
+this is settings.py 
+"EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 465  # Port 465 for SSL
+EMAIL_USE_SSL = True  # Use SSL instead of TLS
+EMAIL_USE_TLS = False  # Disable TLS since we are using SSL
+EMAIL_HOST_USER = 'itkareabby@gmail.com'
+EMAIL_HOST_PASSWORD = 'brlujnaodblnphia'  # Use your actual password or App Password if 2FA is enabled
+DEFAULT_FROM_EMAIL = 'itkareabby@gmail.com'  # Set your default 'from' email"
+
+
+*********************************
+first read all code and act as a experience api developer 
+i use this api for login with google "from django.contrib.auth.hashers import make_password, check_password
+from django.core.validators import FileExtensionValidator
+from django.db import models
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
+
+@api_view(['POST'])
+def google_login_or_register(request):
+    email = request.data.get('email')
+    display_name = request.data.get('display_name')
+
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Check if the user already exists in the database
+        user = UserEnrolled.objects.get(email=email)
+        return Response({
+            'message': 'User logged in successfully',
+            'email': user.email,
+        }, status=status.HTTP_200_OK)
+    except UserEnrolled.DoesNotExist:
+        # If user doesn't exist, create a new user
+        user = UserEnrolled.objects.create(
+            name=display_name,
+            email=email,
+            password=make_password('default_password'),  # Set a default password or handle it differently
+            # You might need to set other required fields based on your model
+        )
+        return Response({
+            'message': 'User registered successfully',
+            'email': user.email,
+        }, status=status.HTTP_201_CREATED)" 
     
-    return JsonResponse({'error': 'Invalid request method'}, status=400)
-" it created same user multiple time in db if user create first time then give response 
-User created successfully if second time it use same email then give response login susseccfully 
-not save multiple time in db
+and this apis i created to forgot password and to change password but when i changes password api give 
+successful message that password reset successfully but in database password not change or save 
+"from django.core.mail import send_mail
+from django.core.cache import cache
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
+from django.utils.crypto import get_random_string
+from .models import UserEnrolled
+from django.contrib.auth.hashers import make_password
+
+@api_view(['POST'])
+def send_otp(request):
+    email = request.data.get('email')
+    
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = UserEnrolled.objects.get(email=email)
+        otp = get_random_string(length=6, allowed_chars='1234567890')
+        # Store OTP in cache with a timeout of 10 minutes
+        cache.set(email, otp, timeout=600)
+
+        # Send OTP to user's email
+        subject = 'Password Reset OTP'
+        message = f'Your OTP for password reset is {otp}. It will expire in 10 minutes.'
+        send_mail(subject, message, 'from@example.com', [email], fail_silently=False)
+
+        return Response({'message': 'OTP sent successfully'}, status=status.HTTP_200_OK)
+
+    except UserEnrolled.DoesNotExist:
+        return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    
+    
+    
+@api_view(['POST'])
+def verify_otp(request):
+    email = request.data.get('email')
+    otp = request.data.get('otp')
+
+    if not email or not otp:
+        return Response({'error': 'Email and OTP are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    stored_otp = cache.get(email)
+    if stored_otp and stored_otp == otp:
+        return Response({'message': 'OTP verified successfully'}, status=status.HTTP_200_OK)
+    else:
+        return Response({'error': 'Invalid or expired OTP'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    
+from django.contrib.auth.hashers import make_password
+from django.core.cache import cache
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
+
+
+
+@api_view(['POST'])
+def reset_password(request):
+    email = request.data.get('email')
+    new_password = request.data.get('new_password')
+    otp = request.data.get('otp')
+
+    if not email or not new_password or not otp:
+        return Response({'error': 'Email, new password, and OTP are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    stored_otp = cache.get(email)
+    if stored_otp and stored_otp == otp:
+        try:
+            user = UserEnrolled.objects.get(email=email)
+            # Manually hash the password
+            hashed_password = make_password(new_password)
+            user.password = hashed_password
+            user.save(update_fields=['password'])  # Save only the password field
+            cache.delete(email)
+            return Response({'message': 'Password reset successfully'}, status=status.HTTP_200_OK)
+        except UserEnrolled.DoesNotExist:
+            return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        return Response({'error': 'Invalid or expired OTP'}, status=status.HTTP_400_BAD_REQUEST)
+    
+"

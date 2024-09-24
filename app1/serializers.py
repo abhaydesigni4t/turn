@@ -827,3 +827,63 @@ class AppleUserEnrolledSerializer(serializers.ModelSerializer):
         # Update other fields as needed
         instance.save()
         return instance
+    
+    
+from rest_framework import serializers
+from .models import UserEnrolled
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        try:
+            user = UserEnrolled.objects.get(email=value)
+        except UserEnrolled.DoesNotExist:
+            raise serializers.ValidationError("No user is registered with this email address.")
+        return value
+
+class ResetPasswordSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    new_password = serializers.CharField()
+
+    def validate(self, data):
+        token = data.get('token')
+        try:
+            user = UserEnrolled.objects.get(identity_token=token)
+        except UserEnrolled.DoesNotExist:
+            raise serializers.ValidationError("Invalid or expired token.")
+        
+        data['user'] = user
+        return data
+
+    def save(self):
+        user = self.validated_data['user']
+        user.set_password(self.validated_data['new_password'])  # Hash and set the new password
+        user.identity_token = None  # Clear the token after successful password reset
+        user.save(update_fields=['identity_token'])  # Save only the identity_token field
+        
+        
+from django.contrib.auth.hashers import check_password
+
+class LoginSerializerApp55(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+
+        if not email or not password:
+            raise serializers.ValidationError("Both email and password are required.")
+
+        # Fetch the user by email
+        try:
+            user = UserEnrolled.objects.get(email=email)
+        except UserEnrolled.DoesNotExist:
+            raise serializers.ValidationError("Invalid email or password.")
+
+        # Check if the provided password matches the stored hashed password
+        if not check_password(password, user.password):
+            raise serializers.ValidationError("Invalid email or password.")
+
+        return data

@@ -513,8 +513,8 @@
             <form method="post" action="{% url 'delete_selected5' %}">
                 {% csrf_token %}
                 <div class="filter-container">
-                    <input type="text" id="filterName" placeholder="Filter by Name">
-                    <input type="date" id="filterDate" placeholder="Filter by Date">
+                    <input type="text" id="filterName" value="{{ filter_name }}" placeholder="Filter by Name">
+                    <input type="date" id="filterDate" value="{{ filter_date }}" placeholder="Filter by Date">
                 </div>
                 <table id="customers">
                     <thead>
@@ -546,8 +546,8 @@
             <div class="pagination">
                 <span class="step-links">
                     {% if on_site_users.has_previous %}
-                        <a href="?page=1{% if site_name %}&site_name={{ site_name }}{% endif %}">&laquo; first</a>
-                        <a href="?page={{ on_site_users.previous_page_number }}{% if site_name %}&site_name={{ site_name }}{% endif %}">previous</a>
+                        <a href="?page=1{% if site_name %}&site_name={{ site_name }}{% endif %}{% if filter_name %}&filterName={{ filter_name }}{% endif %}{% if filter_date %}&filterDate={{ filter_date }}{% endif %}">&laquo; first</a>
+                        <a href="?page={{ on_site_users.previous_page_number }}{% if site_name %}&site_name={{ site_name }}{% endif %}{% if filter_name %}&filterName={{ filter_name }}{% endif %}{% if filter_date %}&filterDate={{ filter_date }}{% endif %}">previous</a>
                     {% endif %}
             
                     <span class="current">
@@ -555,11 +555,12 @@
                     </span>
             
                     {% if on_site_users.has_next %}
-                        <a href="?page={{ on_site_users.next_page_number }}{% if site_name %}&site_name={{ site_name }}{% endif %}">next</a>
-                        <a href="?page={{ on_site_users.paginator.num_pages }}{% if site_name %}&site_name={{ site_name }}{% endif %}">last &raquo;</a>
+                        <a href="?page={{ on_site_users.next_page_number }}{% if site_name %}&site_name={{ site_name }}{% endif %}{% if filter_name %}&filterName={{ filter_name }}{% endif %}{% if filter_date %}&filterDate={{ filter_date }}{% endif %}">next</a>
+                        <a href="?page={{ on_site_users.paginator.num_pages }}{% if site_name %}&site_name={{ site_name }}{% endif %}{% if filter_name %}&filterName={{ filter_name }}{% endif %}{% if filter_date %}&filterDate={{ filter_date }}{% endif %}">last &raquo;</a>
                     {% endif %}
                 </span>
             </div>
+            
             
         </div>
     </div>
@@ -592,42 +593,26 @@
     </script>
         
 
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const nameInput = document.getElementById('filterName');
-                const dateInput = document.getElementById('filterDate');
-                const table = document.getElementById('customers');
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const nameInput = document.getElementById('filterName');
+            const dateInput = document.getElementById('filterDate');
             
-                // Convert date from 'YYYY-MM-DD' to 'YYYY-MM-DD'
-                function formatDate(date) {
-                    return date.toISOString().split('T')[0]; // Format to 'YYYY-MM-DD'
-                }
-            
-                function filterTable() {
-                    const nameFilter = nameInput.value.toLowerCase();
-                    const dateFilter = dateInput.value ? formatDate(new Date(dateInput.value)) : '';
-            
-                    table.querySelectorAll('tbody tr').forEach(row => {
-                        const name = row.getAttribute('data-name').toLowerCase();
-                        const timestamp = row.getAttribute('data-timestamp').split(' ')[0]; // Extract date part only
-            
-                        // Check if row matches the filters
-                        const matchesName = name.includes(nameFilter);
-                        const matchesDate = !dateFilter || timestamp === dateFilter;
-            
-                        if (matchesName && matchesDate) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                }
-            
-                // Add event listeners for input fields
-                nameInput.addEventListener('input', filterTable);
-                dateInput.addEventListener('input', filterTable);
+            nameInput.addEventListener('input', () => {
+                filterAndSubmit();
             });
-            </script>
+            dateInput.addEventListener('input', () => {
+                filterAndSubmit();
+            });
+        
+            function filterAndSubmit() {
+                const filterName = nameInput.value;
+                const filterDate = dateInput.value;
+                const queryString = `?filterName=${filterName}&filterDate=${filterDate}`;
+                window.location.href = queryString;  // This will reload the page with the filters applied
+            }
+        });
+        </script>
             
 </body>
 

@@ -81,7 +81,7 @@ class UserEnrolled(models.Model):
         ('pending', 'Pending'),
     ], default='pending')
     email = models.EmailField()
-    password = models.CharField(max_length=50)
+    password = models.CharField(max_length=255)
     site = models.ForeignKey('Site', on_delete=models.CASCADE, blank=True, null=True)
     identity_token = models.CharField(max_length=255, blank=True, null=True)  # Add this field
     first_name = models.CharField(max_length=100, blank=True, null=True)  # Add this field
@@ -91,14 +91,16 @@ class UserEnrolled(models.Model):
     
 
     def __str__(self):
-        return self.name
+        return f"{self.name} {self.first_name}"
+    
 
     def get_folder_name(self):
         return self.name
 
     def set_password(self, raw_password):
         self.password = make_password(raw_password)
-
+        self.save(update_fields=['password'])  # Save only the password field
+    
     def check_password(self, raw_password):
         return check_password(raw_password, self.password)
         

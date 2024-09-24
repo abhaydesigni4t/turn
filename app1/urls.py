@@ -1,6 +1,6 @@
 from django.urls import path
 from app1 import views
-from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView,SignUpView,AdminLoginView,SignupView_new,LoginView_new,signup_view_new,login_view_new,GetSignupUserRetrieveAPIView,SignupUserUpdateView,ExpiryPostAPIView,BulkUpdateByEmailView,UserEnrolledUpdateAPIView_n,DatasetUpdateStatusView,DetectChangesView,FaceVerificationAndRelayAPI,LoginAPIApp1,SubAdminSitesAPIView,SiteWorkersAPIView,PendingSiteWorkersAPIView,UserEnrolledViewNoTag,GetOrientationApiView,ExitCreateView,ExitListView,GoogleLoginAPIView
+from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView,SignUpView,AdminLoginView,SignupView_new,LoginView_new,signup_view_new,login_view_new,GetSignupUserRetrieveAPIView,SignupUserUpdateView,ExpiryPostAPIView,BulkUpdateByEmailView,UserEnrolledUpdateAPIView_n,DatasetUpdateStatusView,DetectChangesView,FaceVerificationAndRelayAPI,LoginAPIApp1,SubAdminSitesAPIView,SiteWorkersAPIView,PendingSiteWorkersAPIView,UserEnrolledViewNoTag,GetOrientationApiView,ExitCreateView,ExitListView,GoogleLoginAPIView,PasswordResetAPIView,ForgotPasswordView,LoginAPIApp55
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -149,11 +149,16 @@ urlpatterns = [
     path('apple_login/',views.apple_sign_in,name='apple_login'), 
     path('apple_check/',views.check_user,name='apple_check'),
     path('apple_create/',views.create_user,name='apple_create'),
+    path('reset_password/', PasswordResetAPIView.as_view(), name='reset_password'),
+    path('forgot_password/', ForgotPasswordView.as_view(), name='forgot_password'),
+    path('send_otp/', views.send_otp, name='send_otp'),
+    path('verify_otp/', views.verify_otp, name='verify_otp'),
+    path('reset_password1/', views.reset_password, name='reset_password1'),
+    path('loginapi55/', LoginAPIApp55.as_view(), name='loginapi55'),
 
-
+    
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
 
 
 
@@ -162,3 +167,5 @@ urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    
+    
