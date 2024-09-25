@@ -597,22 +597,31 @@
         document.addEventListener('DOMContentLoaded', () => {
             const nameInput = document.getElementById('filterName');
             const dateInput = document.getElementById('filterDate');
-            
+            let typingTimer; // Timer identifier
+            const typingDelay = 2000; // Delay in ms (500ms)
+    
+            // Debounce for name filtering
             nameInput.addEventListener('input', () => {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(filterAndSubmit, typingDelay);
+            });
+    
+            // Trigger filter immediately when the date is changed
+            dateInput.addEventListener('change', () => {
                 filterAndSubmit();
             });
-            dateInput.addEventListener('input', () => {
-                filterAndSubmit();
-            });
-        
+    
             function filterAndSubmit() {
                 const filterName = nameInput.value;
                 const filterDate = dateInput.value;
+    
+                // Construct query string and reload page
                 const queryString = `?filterName=${filterName}&filterDate=${filterDate}`;
-                window.location.href = queryString;  // This will reload the page with the filters applied
+                window.location.href = queryString;
             }
         });
-        </script>
+    </script>
+    
             
 </body>
 

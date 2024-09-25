@@ -1350,8 +1350,18 @@ def site_document(request):
     site_names = [(site.name, site.name) for site in sites]
     return render(request,'app1/site_documents.html',{'site_name':site_name,'site_names':site_names})
 
+from django.core.paginator import Paginator
+from django.shortcuts import render
+from datetime import datetime
+
+from django.core.paginator import Paginator
+from django.shortcuts import render
+from datetime import datetime
+
 def preshift(request):
     site_name = request.GET.get('site_name') or request.session.get('site_name')
+    selected_date = request.GET.get('selected_date')  # Fetch selected date from GET parameters
+
     if site_name:
         request.session['site_name'] = site_name
 
@@ -1361,27 +1371,35 @@ def preshift(request):
         try:
             site = Site.objects.get(name=site_name)
             queryset = queryset.filter(site=site)
-            print(f"Site found: {site.name}")  # Debugging print statement
         except Site.DoesNotExist:
             queryset = PreShift.objects.none()
-            print(f"Site not found: {site_name}")  # Debugging print statement
 
-    paginator = Paginator(queryset, 10) 
+    # If a date is selected, filter by that date
+    if selected_date:
+        try:
+            date_obj = datetime.strptime(selected_date, '%Y-%m-%d').date()
+            queryset = queryset.filter(date=date_obj)  # Use 'date' directly to filter the DateField
+        except ValueError:
+            pass  # Handle invalid date input if needed
+
+    paginator = Paginator(queryset, 3)
     page_number = request.GET.get('page')
     preshifts = paginator.get_page(page_number)
-    
-    # Filter sites based on user permissions
+
     user = request.user
     if user.is_staff and not user.is_superuser:
-        # If the user is a sub-admin, get the sites associated with them
         sites = user.sites.all()
     else:
-        # If the user is a super admin, get all sites
         sites = Site.objects.all()
 
     site_names = [(site.name, site.name) for site in sites]
-    
-    return render(request, 'app1/preshift.html', {'preshifts': preshifts, 'site_name': site_name,'site_names':site_names})
+
+    return render(request, 'app1/preshift.html', {
+        'preshifts': preshifts,
+        'site_name': site_name,
+        'site_names': site_names,
+        'selected_date': selected_date  # Pass the selected date back to the template
+    })
 
 
 def add_preshift(request):
@@ -1450,6 +1468,8 @@ def delete_preshift(request, pk):
 
 def toolbox(request):
     site_name = request.GET.get('site_name') or request.session.get('site_name')
+    selected_date = request.GET.get('selected_date')  # Get selected date from query parameters
+
     if site_name:
         request.session['site_name'] = site_name
 
@@ -1464,7 +1484,11 @@ def toolbox(request):
             queryset = ToolBox.objects.none()
             print(f"Site not found: {site_name}")  # Debugging print statement
 
-    paginator = Paginator(queryset, 10)  # 10 items per page
+    if selected_date:
+        # Filter by selected date (assuming 'date' is the correct field)
+        queryset = queryset.filter(date=selected_date)  # Use the actual field name
+
+    paginator = Paginator(queryset, 3)  # 3 items per page
     page_number = request.GET.get('page')
     toolbox_talks = paginator.get_page(page_number)
 
@@ -1479,7 +1503,12 @@ def toolbox(request):
 
     site_names = [(site.name, site.name) for site in sites]
 
-    return render(request, 'app1/toolbox.html', {'toolbox_talks': toolbox_talks, 'site_name': site_name,'site_names':site_names})
+    return render(request, 'app1/toolbox.html', {
+        'toolbox_talks': toolbox_talks,
+        'site_name': site_name,
+        'selected_date': selected_date,  # Pass selected_date to the template
+        'site_names': site_names
+    })
 
 
 def add_toolbox(request):
@@ -1904,8 +1933,8 @@ from .models import OnSiteUser
 
 def onsite_user(request):
     site_name = request.GET.get('site_name') or request.session.get('site_name')
-    filter_name = request.GET.get('filterName', '').lower()  # Get name filter from request
-    filter_date = request.GET.get('filterDate', '')  # Get date filter from request
+    filter_name = request.GET.get('filterName', '').lower()
+    filter_date = request.GET.get('filterDate', '')  
 
     if site_name:
         request.session['site_name'] = site_name
@@ -1922,12 +1951,16 @@ def onsite_user(request):
     # Apply name filter if provided
     if filter_name:
         queryset = queryset.filter(name__icontains=filter_name)
-    
-    # Apply date filter if provided
-    if filter_date:
-        queryset = queryset.filter(timestamp__date=filter_date)  # Assuming 'timestamp' is the field storing the datetime
 
-    paginator = Paginator(queryset, 3)  # Paginate with 3 items per page
+    # Apply date filter if provided and ensure correct format
+    if filter_date:
+        try:
+            # Parse the date to ensure it's correct
+            queryset = queryset.filter(timestamp__date=filter_date)
+        except ValueError:
+            pass  # Invalid date format, ignore
+
+    paginator = Paginator(queryset, 3)
     page_number = request.GET.get('page')
     on_site_users = paginator.get_page(page_number)
 
@@ -1935,7 +1968,6 @@ def onsite_user(request):
     for user in on_site_users:
         user.face = 1 if user.face else 0
 
-    # Filter sites based on user permissions
     user = request.user
     if user.is_staff and not user.is_superuser:
         sites = user.sites.all()
@@ -1950,7 +1982,7 @@ def onsite_user(request):
         'site_name': site_name,
         'site_names': site_names,
         'filter_name': filter_name,
-        'filter_date': filter_date,  # Pass filters back to the template
+        'filter_date': filter_date,
     })
 
 

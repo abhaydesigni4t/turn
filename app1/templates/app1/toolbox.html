@@ -649,8 +649,7 @@
         </div>
         <div id="table-container">
             <div class="filter-container">
-             
-                <input type="date" id="selected_date">
+                <input type="date" id="selected_date" value="{{ selected_date }}">
             </div>
     
             <table id="customers">
@@ -697,8 +696,8 @@
             <div class="pagination">
                 <span class="step-links">
                     {% if toolbox_talks.has_previous %}
-                        <a href="?page=1&site_name={{ site_name }}">&laquo; first</a>
-                        <a href="?page={{ toolbox_talks.previous_page_number }}&site_name={{ site_name }}">previous</a>
+                        <a href="?page=1&site_name={{ site_name }}{% if selected_date %}&selected_date={{ selected_date }}{% endif %}">&laquo; first</a>
+                        <a href="?page={{ toolbox_talks.previous_page_number }}&site_name={{ site_name }}{% if selected_date %}&selected_date={{ selected_date }}{% endif %}">previous</a>
                     {% endif %}
             
                     <span class="current">
@@ -706,8 +705,8 @@
                     </span>
             
                     {% if toolbox_talks.has_next %}
-                        <a href="?page={{ toolbox_talks.next_page_number }}&site_name={{ site_name }}">next</a>
-                        <a href="?page={{ toolbox_talks.paginator.num_pages }}&site_name={{ site_name }}">last &raquo;</a>
+                        <a href="?page={{ toolbox_talks.next_page_number }}&site_name={{ site_name }}{% if selected_date %}&selected_date={{ selected_date }}{% endif %}">next</a>
+                        <a href="?page={{ toolbox_talks.paginator.num_pages }}&site_name={{ site_name }}{% if selected_date %}&selected_date={{ selected_date }}{% endif %}">last &raquo;</a>
                     {% endif %}
                 </span>
             </div>
@@ -739,39 +738,18 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const dateInput = document.getElementById('selected_date');
-            const table = document.getElementById('customers');
             
-            // Function to format a Date object as "Month Day, Year"
-            function formatDate(date) {
-                const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                return date.toLocaleDateString('en-US', options);
-            }
-            
-            dateInput.addEventListener('input', () => {
+            // Function to trigger filtering when the date is selected
+            dateInput.addEventListener('change', () => {
                 const selectedDate = dateInput.value;
-                if (!selectedDate) {
-                    // If no date is selected, show all rows
-                    table.querySelectorAll('tr[data-date]').forEach(row => {
-                        row.style.display = '';
-                    });
-                    return;
-                }
-        
-                // Convert selectedDate from 'yyyy-mm-dd' to 'Month Day, Year'
-                const selectedDateObj = new Date(selectedDate);
-                const formattedSelectedDate = formatDate(selectedDateObj);
-                
-                table.querySelectorAll('tr[data-date]').forEach(row => {
-                    const rowDate = row.getAttribute('data-date');
-                    if (rowDate === formattedSelectedDate) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
+                // Redirect to the same page with selected date as a query parameter
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('selected_date', selectedDate);
+                window.location.href = currentUrl;  // Navigate to the updated URL
             });
         });
         </script>
+        
         
         
 </body>
