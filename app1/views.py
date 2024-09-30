@@ -1506,7 +1506,7 @@ def toolbox(request):
     return render(request, 'app1/toolbox.html', {
         'toolbox_talks': toolbox_talks,
         'site_name': site_name,
-        'selected_date': selected_date,  # Pass selected_date to the template
+        'selected_date': selected_date,  
         'site_names': site_names
     })
 
@@ -3623,7 +3623,6 @@ from django.core.cache import cache
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
-
 
 
 import logging

@@ -131,277 +131,216 @@ DEFAULT_FROM_EMAIL = 'itkareabby@gmail.com'  # Set your default 'from' email"
 
 
 *********************************
-modify following code 
-the problem is when i trying to filter data by date when i selecting calender and when i selected 
-privious months date then input box automatically selecte current date but selected month for example 
-if i selected augest in calender in it automatically selecte 25/08/2024 automatically and handle pagination
-when i click on next button i wanted to show only filter data 
-this is view "def preshift(request):
-site_name = request.GET.get('site_name') or request.session.get('site_name')
-if site_name:
-    request.session['site_name'] = site_name
 
-queryset = PreShift.objects.all()
 
-if site_name:
-    try:
-        site = Site.objects.get(name=site_name)
-        queryset = queryset.filter(site=site)
-        print(f"Site found: {site.name}")  # Debugging print statement
-    except Site.DoesNotExist:
-        queryset = PreShift.objects.none()
-        print(f"Site not found: {site_name}")  # Debugging print statement
+i write media quries for mobile view i use 3 line to open sidebar links so not i want 3 line for header 
+after click on that 3 line icon then i want to show header links and if header link contain dropdown so handle 
+that also 
+this is html code "<header>
+    <div class="hidden-desktop" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </div>
 
-paginator = Paginator(queryset, 3) 
-page_number = request.GET.get('page')
-preshifts = paginator.get_page(page_number)
+    <nav class="nav">
+        <a href="{% url 'get_all' %}"><i class="fas fa-user-friends"></i>User Management</a>
+        <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-database"></i> Asset Management</a>
+        <a href="{% url 'site_docu' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-folder-open"></i> Site Documents</a>
+        <a href="{% url 'onsite_user' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-user-circle"></i> On Site User</a>
+        
+        <div class="dropdown">
+            <a href="#" class="dropbtn"><i class="fas fa-language"></i> Language</a>
+            <div class="dropdown-content">
+                <a href="#"><i class="fas fa-globe"></i> English</a>
+                <a href="#"><i class="fas fa-globe"></i> Spanish</a>
+            </div>
+        </div>
+        
+        <div class="dropdown">
+            <a href="#" class="dropbtn"><i class="fas fa-sliders-h"></i> Settings</a>
+            <div class="dropdown-content">
+                <a href="{% url 'time' %}?site_name={{ site_name }}"><i class="far fa-clock"></i> Time Schedule</a>
+                <a href="{% url 'setting_t' %}?site_name={{ site_name }}"><i class="fas fa-exchange-alt"></i> Turnstile</a>
+                <a href="{% url 'create_subadmin' %}"><i class="fas fa-user-shield"></i>Manage SubAdmins</a>
+            </div>
+        </div>
+    </nav>
 
-# Filter sites based on user permissions
-user = request.user
-if user.is_staff and not user.is_superuser:
-    # If the user is a sub-admin, get the sites associated with them
-    sites = user.sites.all()
-else:
-    # If the user is a super admin, get all sites
-    sites = Site.objects.all()
+</header>
 
-site_names = [(site.name, site.name) for site in sites]
+<a class="nav-toggle-label hidden-desktop" onclick="toggleNav()">
+    <i class="fas fa-bars"></i>
+</a>
 
-return render(request, 'app1/preshift.html', {'preshifts': preshifts, 'site_name': site_name,'site_names':site_names})
-"
 
-this is html "<div class="filter-container">
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <a href="#"><img src="{% static 'app1/images/logo.png' %}" alt="Logo"></a>
+    </div>
+    
+    <a href="{% url 'sites' %}?site_name={{ site_name }}"><i class="fas fa-globe"></i> Site Management</a>
+        
+    {% if site_names %}
+    <div class="dropdownl">
+        <a href="#" class="dropdown-link">
+            <i class="fa fa-circle"></i> {{ site_name }}
+        </a>
+        <div class="dropdown-contentl">
+            {% for name in site_names %}
+                <a href="{% url 'get_all' %}?site_name={{ name.0 }}">{{ name.1 }}</a>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+    <a href="{% url 'report' %}?site_name={{ site_name }}"><i class="fas fa-chart-line"></i> Analytics & Reports</a>
+    <a href="{% url 'notification1' %}?site_name={{ site_name }}"><i class="fas fa-bell"></i> Notifications</a>
+    <a href="{% url 'company' %}?site_name={{ site_name }}"><i class="fas fa-building"></i> Company</a>
+
+
+    <br> <br> <br> <br> <br> <br> 
+
+    <div class="user-info">
+        <div class="user-details">
+            <img src="{% static 'app1/images/admin_image1.jpg' %}" alt="User">
+            <div>
+                <p>Annette Black</p>
+                <small>Admin</small>
+            </div>
+        </div>
+    </div>
+    <a href="{% url 'app2_login' %}" class="logout" style="color: red;"><i class="fas fa-sign-out-alt"></i> Log out</a>
+    <a href="#" class="">AssureTech 2024</a>
+</div>
+
+
+<div class="content">
+
+    <div class="user">
+        <a class="add" href="{% url 'add_asset' %}" class="add-new-button">Add New</a>
+        <a class="add" href="{% url 'exit' %}"><i class="add-new-button"></i> Exit Status</a>
+    </div>
+
+    <div id="table-container">
+        <table id="customers">
+        <tr>
+            <th>Picture</th>
+            <th>Asset Name</th>
+            <th>Tag ID</th>
+
+            <th>Asset Status</th>
+            <th>Action</th>
+        </tr>
+        {% for asset in assets %}
+        <tr>
+            <td>
+                {% if asset.picture %}
+                <img src="{{ asset.picture.url }}" alt="Asset" style="width: 50px; height: 50px; object-fit: cover;">
+                {% else %}
+                <img src="{% static 'app1/images/asset.jpg' %}" alt="Asset" style="width: 50px; height: 50px; object-fit: cover;">
+                {% endif %}
+            </td>
+            <td><a class="link" href="{% url 'update_asset' id=asset.id %}">{{ asset.asset_name }}</a></td>
+            <td>{{ asset.tag_id }}</td>
             
-    <input type="date" id="selected_date">
+            <td>{{ asset.status }}</td>
+            <td>
+                <div class="dropdownb">
+                    <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
+                    <div class="dropdown-contentb">
+                        <a href="{% url 'update_asset' id=asset.id %}" class="edit-btn">Edit</a>
+                        <a href="{% url 'delete_asset' id=asset.id %}" class="delete-btn">Delete</a>
+                    </div>
+                </div>
+            </td>   
+            
+        </tr>
+        {% endfor %}
+    </table>
+
+    
+    <div class="pagination">
+        <span class="step-links">
+            {% if assets.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ assets.previous_page_number }}">previous</a>
+            {% endif %}
+    
+            <span class="current">
+                Page {{ assets.number }} of {{ assets.paginator.num_pages }}.
+            </span>
+    
+            {% if assets.has_next %}
+                <a href="?page={{ assets.next_page_number }}">next</a>
+                <a href="?page={{ assets.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+</div>
+</div>
 </div>"
+this is js code " <script>
+    function toggleSidebar() {
+        var sidebar = document.querySelector('.sidebar');
+        sidebar.classList.toggle('active');
+    }
 
-this is java script to filter data by date "<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const dateInput = document.getElementById('selected_date');
-        const table = document.getElementById('customers');
+    document.addEventListener('click', function(event) {
+        var sidebar = document.querySelector('.sidebar');
+        var hamburgerIcon = document.querySelector('.hidden-desktop');
         
-        // Function to format a Date object as "Month Day, Year"
-        function formatDate(date) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return date.toLocaleDateString('en-US', options);
+        if (!sidebar.contains(event.target) && !hamburgerIcon.contains(event.target)) {
+            sidebar.classList.remove('active');
         }
-        
-        dateInput.addEventListener('input', () => {
-            const selectedDate = dateInput.value;
-            if (!selectedDate) {
-                // If no date is selected, show all rows
-                table.querySelectorAll('tr[data-date]').forEach(row => {
-                    row.style.display = '';
-                });
-                return;
-            }
-    
-            // Convert selectedDate from 'yyyy-mm-dd' to 'Month Day, Year'
-            const selectedDateObj = new Date(selectedDate);
-            const formattedSelectedDate = formatDate(selectedDateObj);
-            
-            table.querySelectorAll('tr[data-date]').forEach(row => {
-                const rowDate = row.getAttribute('data-date');
-                if (rowDate === formattedSelectedDate) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
     });
-    </script>"
+</script>"
 
-    .dropdownb {
-        position: relative;
-        display: inline-block;
-    }
-    
-    /* Style the dropdown button */
-    .toggle-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 0;
-    }
-    
-    /* Style for the dropdown content */
-    .dropdown-contentb {
+this is media quries "
+@media (max-width: 768px) {
+    .header .nav {
         display: none;
+    }
+
+    .hidden-desktop {
+        display: block;
         position: absolute;
-        top: 100%; /* Position the dropdown content directly below the button */
-        left: -28px; /* Align the dropdown content to the left */
-        box-shadow: 0 8px 14px rgba(0, 0, 0, 0.2);
-        z-index: 1;
-        min-width: 70px;
-    }
-    
-    /* Links inside the dropdown */
-    .dropdown-contentb a {
-        color: black;
-        padding: 7px 9px;
-        text-decoration: none;
-        display: block;
-    }
-    
-    
-    /* Use :hover to display the dropdown when the button is hovered */
-    .dropdownb:hover .dropdown-contentb {
-        display: block;
-    }
-    
-    /* Additional styling for the button icon */
-    .btn-icon {
-        background: none; /* Remove background color */
-        border: none;     /* Remove border */
-        color: inherit;   /* Inherit text color */
-        cursor: pointer;  /* Pointer cursor */
-        padding: 0;       /* Remove padding */
-    }
-    
-    .btn-icon i {
-        font-size: 16px;  /* Adjust icon size if needed */
+        top: 15px;
+        left: 15px; /* Changed from right to left */
+        font-size: 24px;
+        cursor: pointer;
     }
 
+    .sidebar {
+        width: 200px;
+        transform: translateX(-250px); /* Hidden by default */
+    }
 
-    .content {
-        margin-left: 250px;
-        padding: 20px;
+    .sidebar.active {
+        transform: translateX(0); /* Show sidebar */
     }
 
     #table-container {
-        margin-top: 10px;
-        margin-left: -10px;
-        margin-right: 50px;
+        margin-left: -270px;
+        padding: 15px;
         background-color: #ffffff;
-        width: 100%;
-        overflow-y: auto; /* Allow vertical scrolling */
-        height: calc(100vh - 100px); /* Adjust height according to your needs */
+        width:1000px;
+
     }
 
-    #customers {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-    }
-    
-    #customers th,
-    #customers td {
-        padding: 8px 10px;
-        text-align: center;
-        border-bottom: 1px solid #ddd;
-    }
-    
-    #customers th {
-        background-color: #e3e7ea;
-        font-weight: bold;
-    }
-    
-    #customers tbody tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-
-
-    .add {
-        background-color: #071390;
-        color: white;
-        padding: 8px;
-        border: solid;
-        margin-top: 10px;
-        display: inline-block;
-        text-decoration: none;
-        border-radius: 7px 7px;
+    .logo img {
+        max-height: 40px;
     }
 
     .user {
-        text-align: left;
-        margin-top: 50px;
-        margin-left: -10px;
+        margin-top: 70px;
+        margin-left:-240px;
     }
 
-    .filter-container {
-        text-align: right; /* Aligns the filter form to the right */
-        margin-bottom: 20px; /* Add some space below the filter */
-    }
-    
-    /* Optional: Style the filter form */
-    .filter-container form {
-        display: inline-block; /* Keeps the label and input on the same line */
-    }
-    
-    .filter-container label,
-    .filter-container input[type="date"],
-    .filter-container button {
-        margin: 5px; /* Add some space around form elements */
-    }
-    
-    .dropdownl {
-        position: relative;
-        display: inline-block;
-        margin-left:30px;
-        padding:-5px;
-       
-    }
-    
-    /* Style for the dropdown link */
-    .dropdown-link {
-        display: block;
-        padding: 10px 15px;
-        color: #333;
-        text-decoration: none;
-        background-color: #f8f9fa;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 10px;
-        transition: background-color 0.3s ease;
-    }
-    
-    .dropdown-link:hover {
-        background-color: #e2e6ea;
-    }
-    
-    /* Hidden by default (not displayed) */
-    .dropdown-contentl {
-        display: none;
-        position: absolute;
-        background-color: #ffffff;
-        min-width: 160px;
-        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-        z-index: 1;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-    }
-    
-    /* Style for dropdown items */
-    .dropdown-contentl a {
-        color: #333;
-        text-decoration: none;
-        display: block;
-        font-size: 12px;
-        transition: background-color 0.3s ease;
-        text-align:center;
-       
-    }
-    
-    .dropdown-contentl a:hover {
-        background-color: #f1f1f1;
-    }
-    
-    /* Show the dropdown content on hover */
-    .dropdownl:hover .dropdown-contentl {
-        display: block;
-    }
-    
-    /* Adjust dropdown link for better alignment */
-    .dropdown-link {
-        display: flex;
-        align-items: center;
-        padding:-5px;
-    }
-    
-    .dropdown-link i {
-        margin-right: 8px;
-        font-size:10px;
+    .nav {
+        margin-right: auto; /* Adjusted to auto to prevent fixed margin on right */
+        margin-left:65px;
     }
 
+
+}"
+
+
+    
