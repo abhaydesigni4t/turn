@@ -272,30 +272,7 @@
             background-color: #0a1052;
         }
 
-        @media only screen and (max-width: 768px) {
-            .content {
-                margin-top: 10px;
-            }
-
-            .form-container {
-                max-width: 100%;
-            }
-        }
-
-        @media only screen and (max-width: 600px) {
-            .form-container {
-                padding: 10px;
-            }
-
-            input,
-            button {
-                width: 100%;
-                margin-bottom: 15px; 
-            }
-           
-        }
         
-
         .r1{
             margin-left: 700px;
         }
@@ -304,63 +281,6 @@
         display: none;
         }
 
-
-    @media only screen and (max-width: 768px) {
-            .hidden-desktop {
-                display: block;
-            }
-
-            .nav {
-                display: none;
-                flex-direction: column;
-                position: absolute;
-                background-color: #071390;
-                width: 60%;
-                top: 70px;
-                left: 0;
-                padding: 10px;
-            }
-
-            .nav.open {
-                display: flex;
-            }
-
-            .nav-toggle-label {
-                display: block;
-                padding: 10px;
-                cursor: pointer;
-            }
-
-            .nav-toggle-label span {
-                display: block;
-                width: 25px;
-                height: 3px;
-                background-color: white;
-                margin: 5px;
-            }
-
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 10px;
-            }
-
-            .logo img {
-                max-height: 25px;
-                margin: 0 0 10px 0;
-            }
-
-            .dropdown-content {
-                left: 0;
-                transform: none;
-                min-width: 100%;
-            }
-
-            .dropdown-content a {
-                text-align: left;
-            }
-        }
-        
         .dropdownl {
             position: relative;
             display: inline-block;
@@ -430,12 +350,149 @@
             margin-right: 8px;
             font-size:10px;
         }
+
+
+        @media (max-width: 768px) {
+            /* Hide header navigation by default */
+            .header .nav {
+                display: none; /* Default hidden */
+            }
+        
+            /* Sidebar toggle (left side) */
+            .sidebar-toggle {
+                display: block;
+                position: absolute;
+                top: 15px;
+                left: 15px;
+                font-size: 24px;
+                cursor: pointer;
+            }
+        
+            /* Header toggle (right side) */
+            .header-toggle {
+                display: block;
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                font-size: 24px;
+                cursor: pointer;
+            }
+        
+            /* Sidebar */
+            .sidebar {
+                width: 200px;
+                transform: translateX(-250px); /* Hidden by default */
+                transition: transform 0.3s ease;
+            }
+        
+            .sidebar.active {
+                transform: translateX(0); /* Show sidebar */
+            }
+        
+            /* Header nav (hidden by default, slides in from top when active) */
+            .nav {
+                display: flex;
+                flex-direction: column;
+                position: fixed;
+                top: -100%; /* Initially off-screen */
+                right: 0; /* Align to the right */
+                background-color: #fff;
+                z-index: 1000;
+                padding: 10px;
+                box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+                transition: top 0.3s ease; /* Smooth slide-in effect */
+                width: 120px; /* Set width for header */
+            }
+        
+            .nav.active {
+                top: 50px; /* Slide down into view */
+            }
+        
+            .nav a {
+                padding: 10px;
+                color: #333;
+                text-decoration: none;
+                display: block;
+                font-size: 14px;
+                border-bottom: 1px solid #ddd;
+            }
+        
+            .nav a:hover {
+                background-color: #f0f0f0;
+            }
+        
+            .dropdown {
+                position: relative;
+            }
+        
+            .dropdown-content {
+                display: none;
+                position: static;
+                background-color: #f9f9f9;
+                padding: 0;
+                width: 120%;
+                box-shadow: none;
+            }
+        
+            .dropdown.active .dropdown-content {
+                display: block;
+            }
+        
+            .dropdown-content a {
+                padding: 10px;
+                display: block;
+                color: #333;
+                text-decoration: none;
+                border-bottom: 1px solid #ddd;
+            }
+        
+            .dropdown-content a:hover {
+                background-color: #f0f0f0;
+            }
+        
+            
+        
+            .logo img {
+                max-height: 40px;
+            }
+        
+            .user {
+                margin-top: 70px;
+                margin-left:-230px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                margin: 20px;
+                
+            }
+
+            input {
+                width: calc(100% - 20px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-container {
+                margin: 10px;
+                margin-top:10px;
+            }
+        }
     </style>
 </head>
 
 <body>
     <header>
-        
+        <div class="hidden-desktop sidebar-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </div>
+    
+        <!-- Header three-line icon (right side) -->
+        <div class="hidden-desktop header-toggle" onclick="toggleHeaderMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
+
         <nav class="nav">
             <a href="{% url 'get_all' %}"><i class="fas fa-user-friends"></i>User Management</a>
             <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-database"></i> Asset Management</a>
@@ -541,15 +598,33 @@
     </script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const pathName = window.location.pathname;
-            const activeLink = document.querySelector(`.sidebar a[href="${pathName}"]`);
+        function toggleSidebar() {
+            var sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('active');
+        }
         
-            if (activeLink) {
-                activeLink.classList.add('activeLink');
-                activeLink.style.color = 'blue'; // Add this line to set the color to blue
+        function toggleHeaderMenu() {
+            var nav = document.querySelector('.nav');
+            nav.classList.toggle('active');
+        }
+        
+        document.addEventListener('click', function(event) {
+            var sidebar = document.querySelector('.sidebar');
+            var headerMenu = document.querySelector('.nav');
+            var sidebarToggleIcon = document.querySelector('.sidebar-toggle');
+            var headerToggleIcon = document.querySelector('.header-toggle');
+        
+            // Close sidebar if clicked outside
+            if (!sidebar.contains(event.target) && !sidebarToggleIcon.contains(event.target)) {
+                sidebar.classList.remove('active');
+            }
+        
+            // Close header menu if clicked outside
+            if (!headerMenu.contains(event.target) && !headerToggleIcon.contains(event.target)) {
+                headerMenu.classList.remove('active');
             }
         });
+        
     </script>
     
 </body>
