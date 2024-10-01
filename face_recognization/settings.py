@@ -230,11 +230,11 @@ GOOGLE_CLIENT_ID = '266538272214-hlg5s2s9a8mj7uvbckvid4auijakocfm.apps.googleuse
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = 'smtp.hostinger.com'
 EMAIL_PORT = 465  # Port 465 for SSL
 EMAIL_USE_SSL = True  # Use SSL instead of TLS
 EMAIL_USE_TLS = False  # Disable TLS since we are using SSL
-EMAIL_HOST_USER = 'itkareabby@gmail.com'
-EMAIL_HOST_PASSWORD = 'brlu jnao dbln phia'  # Use your actual password or App Password if 2FA is enabled
-DEFAULT_FROM_EMAIL = 'itkareabby@gmail.com'  # Set your default 'from' email
+EMAIL_HOST_USER = 'support@assure-tech.online'
+EMAIL_HOST_PASSWORD = 'thgybhy))5(5G'  # Use your actual password or App Password if 2FA is enabled
+DEFAULT_FROM_EMAIL = 'support@assure-tech.online'  # Set your default 'from' email
 

@@ -11,7 +11,7 @@ api for forget google password
 brlu jnao dbln phia
 
 brlujnaodblnphia
-
+support@assure-tech.online
 
 make parameter dynamic
 
@@ -21,123 +21,18 @@ when i go to next page then it not return next sorted data it return constant da
 we have google.html file write render function to render html file 
 
 
-import pickle
-import os
-import random
-import cv2
-import face_recognition
-from imutils import paths
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.conf import settings
-from .serializers import FacialImageDataSerializer
-from .models import UserEnrolled
-
-
-class FacialDataApi(APIView):
-    def post(self, request):
-        serializer = FacialImageDataSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            images = serializer.validated_data['facial_data']
-            uploaded_image_paths = []  # Store paths of new images
-
-            try:
-                user = UserEnrolled.objects.get(email=email)
-                user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name))
-                os.makedirs(user_folder, exist_ok=True)  # Ensure the folder exists
-                
-                for image in images:
-                    # Save each image to the user's folder
-                    image_path = os.path.join(user_folder, image.name)
-                    with open(image_path, 'wb') as img_file:
-                        for chunk in image.chunks():
-                            img_file.write(chunk)
-                    uploaded_image_paths.append(image_path)  # Track the uploaded image paths
-
-                if uploaded_image_paths:
-                    # Set one of the newly uploaded images as the user's picture
-                    random_image = random.choice(uploaded_image_paths)
-                    user.picture = os.path.basename(random_image)
-                    user.save()
-
-            except UserEnrolled.DoesNotExist:
-                return Response("User not found", status=status.HTTP_404_NOT_FOUND)
-
-            # Pass only the new images to be processed for facial recognition
-            self.update_pickle(uploaded_image_paths)
-
-            return Response("Images uploaded and facial data updated successfully", status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def update_pickle(self, uploaded_image_paths):
-        if not uploaded_image_paths:
-            print("No new images to process.")
-            return
-
-        # Assume all images are saved in the same user folder
-        user_folder = os.path.dirname(uploaded_image_paths[0])
-        pickle_file_path = os.path.join(user_folder, 'encodings.pickle')
-
-        knownEncodings = []
-        knownNames = []
-
-        print(f"New images to process: {len(uploaded_image_paths)}")
-
-        for (i, imagePath) in enumerate(uploaded_image_paths):
-            print(f"--> processing image {i + 1}/{len(uploaded_image_paths)}")
-            name = os.path.basename(os.path.dirname(imagePath))
-
-            image = cv2.imread(imagePath)
-            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-            boxes = face_recognition.face_locations(rgb, model="hog")
-            encodings = face_recognition.face_encodings(rgb, boxes)
-
-            print(f"Found {len(encodings)} face(s) in {imagePath}")
-
-            for encoding in encodings:
-                knownEncodings.append(encoding)
-                knownNames.append(name)
-
-        # Load existing encodings if the file exists
-        if os.path.exists(pickle_file_path):
-            with open(pickle_file_path, 'rb') as f:
-                data = pickle.load(f)
-            knownEncodings.extend(data['encodings'])
-            knownNames.extend(data['names'])
-
-        # Save the updated encodings and names
-        data = {"encodings": knownEncodings, "names": knownNames}
-        with open(pickle_file_path, 'wb') as f:
-            pickle.dump(data, f)
-
-        print('--> encodings finalized')
-
-*********************
-
-
-this is settings.py 
-"EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465  # Port 465 for SSL
-EMAIL_USE_SSL = True  # Use SSL instead of TLS
-EMAIL_USE_TLS = False  # Disable TLS since we are using SSL
-EMAIL_HOST_USER = 'itkareabby@gmail.com'
-EMAIL_HOST_PASSWORD = 'brlujnaodblnphia'  # Use your actual password or App Password if 2FA is enabled
-DEFAULT_FROM_EMAIL = 'itkareabby@gmail.com'  # Set your default 'from' email"
-
-
 *********************************
 
-
-i write media quries for mobile view i use 3 line to open sidebar links so not i want 3 line for header 
-after click on that 3 line icon then i want to show header links and if header link contain dropdown so handle 
-that also 
+i write media quries for mobile view now i want to change that make header fix only container or stats
+move according to width 
 this is html code "<header>
-    <div class="hidden-desktop" onclick="toggleSidebar()">
+       
+    <div class="hidden-desktop sidebar-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <!-- Header three-line icon (right side) -->
+    <div class="hidden-desktop header-toggle" onclick="toggleHeaderMenu()">
         <i class="fas fa-bars"></i>
     </div>
 
@@ -146,7 +41,6 @@ this is html code "<header>
         <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-database"></i> Asset Management</a>
         <a href="{% url 'site_docu' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-folder-open"></i> Site Documents</a>
         <a href="{% url 'onsite_user' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-user-circle"></i> On Site User</a>
-        
         <div class="dropdown">
             <a href="#" class="dropbtn"><i class="fas fa-language"></i> Language</a>
             <div class="dropdown-content">
@@ -178,7 +72,7 @@ this is html code "<header>
     </div>
     
     <a href="{% url 'sites' %}?site_name={{ site_name }}"><i class="fas fa-globe"></i> Site Management</a>
-        
+    <!-- Dropdown Link for First Site -->
     {% if site_names %}
     <div class="dropdownl">
         <a href="#" class="dropdown-link">
@@ -195,8 +89,8 @@ this is html code "<header>
     <a href="{% url 'notification1' %}?site_name={{ site_name }}"><i class="fas fa-bell"></i> Notifications</a>
     <a href="{% url 'company' %}?site_name={{ site_name }}"><i class="fas fa-building"></i> Company</a>
 
-
     <br> <br> <br> <br> <br> <br> 
+
 
     <div class="user-info">
         <div class="user-details">
@@ -212,135 +106,189 @@ this is html code "<header>
 </div>
 
 
-<div class="content">
-
-    <div class="user">
-        <a class="add" href="{% url 'add_asset' %}" class="add-new-button">Add New</a>
-        <a class="add" href="{% url 'exit' %}"><i class="add-new-button"></i> Exit Status</a>
+<div class="container">
+    <div class="stats">
+        <div>
+            <span>{{ total_users }}</span>
+            Total Workers
+        </div>
+        <div>
+            <span>{{ active_users }}</span>
+            Active Workers
+        </div>
+        <div>
+            <span>{{ inactive_users }}</span>
+            Inactive Workers
+        </div>
+        <div>
+            <span>{{ pending_users }}</span>
+            Pending Workers
+        </div>
     </div>
-
-    <div id="table-container">
-        <table id="customers">
-        <tr>
-            <th>Picture</th>
-            <th>Asset Name</th>
-            <th>Tag ID</th>
-
-            <th>Asset Status</th>
-            <th>Action</th>
-        </tr>
-        {% for asset in assets %}
-        <tr>
-            <td>
-                {% if asset.picture %}
-                <img src="{{ asset.picture.url }}" alt="Asset" style="width: 50px; height: 50px; object-fit: cover;">
-                {% else %}
-                <img src="{% static 'app1/images/asset.jpg' %}" alt="Asset" style="width: 50px; height: 50px; object-fit: cover;">
-                {% endif %}
-            </td>
-            <td><a class="link" href="{% url 'update_asset' id=asset.id %}">{{ asset.asset_name }}</a></td>
-            <td>{{ asset.tag_id }}</td>
-            
-            <td>{{ asset.status }}</td>
-            <td>
-                <div class="dropdownb">
-                    <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
-                    <div class="dropdown-contentb">
-                        <a href="{% url 'update_asset' id=asset.id %}" class="edit-btn">Edit</a>
-                        <a href="{% url 'delete_asset' id=asset.id %}" class="delete-btn">Delete</a>
-                    </div>
-                </div>
-            </td>   
-            
-        </tr>
-        {% endfor %}
-    </table>
-
-    
-    <div class="pagination">
-        <span class="step-links">
-            {% if assets.has_previous %}
-                <a href="?page=1">&laquo; first</a>
-                <a href="?page={{ assets.previous_page_number }}">previous</a>
-            {% endif %}
-    
-            <span class="current">
-                Page {{ assets.number }} of {{ assets.paginator.num_pages }}.
-            </span>
-    
-            {% if assets.has_next %}
-                <a href="?page={{ assets.next_page_number }}">next</a>
-                <a href="?page={{ assets.paginator.num_pages }}">last &raquo;</a>
-            {% endif %}
-        </span>
+    <div class="chart-container">
+        <img src="{{ chart_url }}" alt="User Status Pie Chart">
     </div>
 </div>
-</div>
+
 </div>"
-this is js code " <script>
-    function toggleSidebar() {
-        var sidebar = document.querySelector('.sidebar');
-        sidebar.classList.toggle('active');
-    }
-
-    document.addEventListener('click', function(event) {
-        var sidebar = document.querySelector('.sidebar');
-        var hamburgerIcon = document.querySelector('.hidden-desktop');
-        
-        if (!sidebar.contains(event.target) && !hamburgerIcon.contains(event.target)) {
-            sidebar.classList.remove('active');
-        }
-    });
-</script>"
-
-this is media quries "
-@media (max-width: 768px) {
+this is css "@media (max-width: 768px) {
+    /* Hide header navigation by default */
     .header .nav {
-        display: none;
+        display: none; /* Default hidden */
     }
 
-    .hidden-desktop {
+    /* Sidebar toggle (left side) */
+    .sidebar-toggle {
         display: block;
         position: absolute;
         top: 15px;
-        left: 15px; /* Changed from right to left */
+        left: 15px;
         font-size: 24px;
         cursor: pointer;
     }
 
+    /* Header toggle (right side) */
+    .header-toggle {
+        display: block;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    /* Sidebar */
     .sidebar {
         width: 200px;
         transform: translateX(-250px); /* Hidden by default */
+        transition: transform 0.3s ease;
     }
 
     .sidebar.active {
         transform: translateX(0); /* Show sidebar */
     }
 
-    #table-container {
-        margin-left: -270px;
-        padding: 15px;
-        background-color: #ffffff;
-        width:1000px;
-
+    /* Header nav (hidden by default, slides in from top when active) */
+    .nav {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: -100%; /* Initially off-screen */
+        right: 0; /* Align to the right */
+        background-color: #fff;
+        z-index: 1000;
+        padding: 10px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        transition: top 0.3s ease; /* Smooth slide-in effect */
+        width: 120px; /* Set width for header */
     }
 
+    .nav.active {
+        top: 50px; /* Slide down into view */
+    }
+
+    .nav a {
+        padding: 10px;
+        color: #333;
+        text-decoration: none;
+        display: block;
+        font-size: 14px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .nav a:hover {
+        background-color: #f0f0f0;
+    }
+
+    .dropdown {
+        position: relative;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: static;
+        background-color: #f9f9f9;
+        padding: 0;
+        width: 120%;
+        box-shadow: none;
+    }
+
+    .dropdown.active .dropdown-content {
+        display: block;
+    }
+
+    .dropdown-content a {
+        padding: 10px;
+        display: block;
+        color: #333;
+        text-decoration: none;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .dropdown-content a:hover {
+        background-color: #f0f0f0;
+    }
+
+    
     .logo img {
         max-height: 40px;
     }
 
     .user {
         margin-top: 70px;
-        margin-left:-240px;
+        margin-left:-260px;
     }
 
-    .nav {
-        margin-right: auto; /* Adjusted to auto to prevent fixed margin on right */
-        margin-left:65px;
+    .container {
+        text-align: center;
+        margin-top: 125px;
+        margin-left: 150px; /* Adjusted margin-left */
+        max-width: 85%; /* Decreased max-width */
     }
-
-
-}"
-
-
     
+   
+
+    .stats {
+        display: flex;
+        justify-content: space-around;
+        width: 220%;
+        margin-left:50px;
+        margin-right:50px;
+    }
+   
+    .stats div span {
+        display: block;
+        font-size: 24px;
+        font-weight: bold;
+    }
+}
+"
+this is js "<script>
+    function toggleSidebar() {
+        var sidebar = document.querySelector('.sidebar');
+        sidebar.classList.toggle('active');
+    }
+    
+    function toggleHeaderMenu() {
+        var nav = document.querySelector('.nav');
+        nav.classList.toggle('active');
+    }
+    
+    document.addEventListener('click', function(event) {
+        var sidebar = document.querySelector('.sidebar');
+        var headerMenu = document.querySelector('.nav');
+        var sidebarToggleIcon = document.querySelector('.sidebar-toggle');
+        var headerToggleIcon = document.querySelector('.header-toggle');
+    
+        // Close sidebar if clicked outside
+        if (!sidebar.contains(event.target) && !sidebarToggleIcon.contains(event.target)) {
+            sidebar.classList.remove('active');
+        }
+    
+        // Close header menu if clicked outside
+        if (!headerMenu.contains(event.target) && !headerToggleIcon.contains(event.target)) {
+            headerMenu.classList.remove('active');
+        }
+    });
+    
+</script>"

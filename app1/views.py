@@ -3593,7 +3593,7 @@ def send_otp(request):
         # Send OTP to user's email
         subject = 'Password Reset OTP'
         message = f'Your OTP for password reset is {otp}. It will expire in 10 minutes.'
-        send_mail(subject, message, 'from@example.com', [email], fail_silently=False)
+        send_mail(subject, message, 'support@assure-tech.online', [email], fail_silently=False)
 
         return Response({'message': 'OTP sent successfully'}, status=status.HTTP_200_OK)
 

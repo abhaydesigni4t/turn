@@ -298,12 +298,10 @@
 
 
 
-
 @media (max-width: 768px) {
     /* Hide header navigation by default */
     .header .nav {
-        display: none;
-  
+        display: none; /* Default hidden */
     }
 
     /* Sidebar toggle (left side) */
@@ -314,7 +312,7 @@
         left: 15px;
         font-size: 24px;
         cursor: pointer;
-}
+    }
 
     /* Header toggle (right side) */
     .header-toggle {
@@ -324,8 +322,6 @@
         right: 15px;
         font-size: 24px;
         cursor: pointer;
-
-    
     }
 
     /* Sidebar */
@@ -344,27 +340,22 @@
         display: flex;
         flex-direction: column;
         position: fixed;
-        top: -100%; /* Hidden by default, off-screen */
-        left: 250px;
-        right: 250px;
+        top: -100%; /* Initially off-screen */
+        right: 0; /* Align to the right */
         background-color: #fff;
         z-index: 1000;
-        padding: 5px;
+        padding: 10px;
         box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
         transition: top 0.3s ease; /* Smooth slide-in effect */
-        margin-left:600px;
-        margin-right:100px;
-        width: 100px; /* Adjust width as needed */
-
+        width: 120px; /* Set width for header */
     }
 
     .nav.active {
-        
-        top: 50px; /* Slide down into view, adjust top if needed */
+        top: 50px; /* Slide down into view */
     }
 
     .nav a {
-        padding: 10px 0;
+        padding: 10px;
         color: #333;
         text-decoration: none;
         display: block;
@@ -378,17 +369,15 @@
 
     .dropdown {
         position: relative;
-      
     }
 
     .dropdown-content {
         display: none;
         position: static;
         background-color: #f9f9f9;
-        width: 200%;
-        box-shadow: none;
         padding: 0;
-     
+        width: 120%;
+        box-shadow: none;
     }
 
     .dropdown.active .dropdown-content {
@@ -407,14 +396,7 @@
         background-color: #f0f0f0;
     }
 
-
-    #table-container {
-        margin-left: 0;
-        padding: 15px;
-        background-color: #ffffff;
-        width:1000px;
-        margin-left:-300px;
-    }
+    
 
     .logo img {
         max-height: 40px;
@@ -422,7 +404,7 @@
 
     .user {
         margin-top: 70px;
-        margin-left:-240px;
+        margin-left:-260px;
     }
 
     .container {
@@ -452,6 +434,7 @@
 
 
 
+
     </style>
 </head>
 
@@ -462,7 +445,7 @@
         <div class="hidden-desktop sidebar-toggle" onclick="toggleSidebar()">
             <i class="fas fa-bars"></i>
         </div>
-
+    
         <!-- Header three-line icon (right side) -->
         <div class="hidden-desktop header-toggle" onclick="toggleHeaderMenu()">
             <i class="fas fa-bars"></i>
