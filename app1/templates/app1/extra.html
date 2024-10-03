@@ -11,11 +11,159 @@ support@assure-tech.online
 
 make parameter dynamic
 
-site_document page,preshift,toolbox,add toolox,edit toolbox,add preshift,edit preshift,orientation
+preshift,toolbox,add toolox,edit toolbox,add preshift,edit preshift,orientation,
+onsite user,time schedule,add time schedule,turnstile,add turnstile,create_subadmin
 
 
 modify add user 
 *********************************
+
+
+
+
+@media (max-width: 768px) {
+    /* Hide header navigation by default */
+    .header .nav {
+        display: none; /* Default hidden */
+    }
+
+    /* Sidebar toggle (left side) */
+    .sidebar-toggle {
+        display: block;
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    /* Header toggle (right side) */
+    .header-toggle {
+        display: block;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 200px;
+        transform: translateX(-250px); /* Hidden by default */
+        transition: transform 0.3s ease;
+    }
+
+    .sidebar.active {
+        transform: translateX(0); /* Show sidebar */
+    }
+
+    /* Header nav (hidden by default, slides in from top when active) */
+    .nav {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: -100%; /* Initially off-screen */
+        right: 0; /* Align to the right */
+        background-color: #fff;
+        z-index: 1000;
+        padding: 10px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        transition: top 0.3s ease; /* Smooth slide-in effect */
+        width: 120px; /* Set width for header */
+    }
+
+    .nav.active {
+        top: 50px; /* Slide down into view */
+    }
+
+    .nav a {
+        padding: 10px;
+        color: #333;
+        text-decoration: none;
+        display: block;
+        font-size: 14px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .nav a:hover {
+        background-color: #f0f0f0;
+    }
+
+    .dropdown {
+        position: relative;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: static;
+        background-color: #f9f9f9;
+        padding: 0;
+        width: 120%;
+        box-shadow: none;
+    }
+
+    .dropdown.active .dropdown-content {
+        display: block;
+    }
+
+    .dropdown-content a {
+        padding: 10px;
+        display: block;
+        color: #333;
+        text-decoration: none;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .dropdown-content a:hover {
+        background-color: #f0f0f0;
+    }
+
+    
+
+    .logo img {
+        max-height: 40px;
+    }
+
+    .user {
+        margin-top: 70px;
+        margin-left:-230px;
+    }
+
+    /* Additional styles for table and logo */
+                #table-container 
+
+                    margin-left:-240px;
+                }
+            
+                #customers {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                }
+            
+                #customers th,
+                #customers td {
+                    padding: 5px;
+                    text-align: center;
+                    border-bottom: 1px solid #ddd;
+                    margin-right:8px;
+                    margin-left:8px;
+                    ]
+
+                }
+            
+                #customers th {
+                    background-color: #e3e7ea;
+                    font-weight: bold;
+                }
+            
+                #customers tbody tr:nth-child(even) {
+                    background-color: #f9f9f9;
+                }
+            
+}
+
 
 
 
