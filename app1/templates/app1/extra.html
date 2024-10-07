@@ -11,14 +11,109 @@ support@assure-tech.online
 
 make parameter dynamic
 
-preshift,toolbox,add toolox,edit toolbox,add preshift,edit preshift,orientation,
-onsite user,time schedule,add time schedule,turnstile,add turnstile,create_subadmin,
-facial_data image,upload facial_data image
+add time schedule,turnstile,add turnstile,create_subadmin,facial_data image,upload facial_data image
 
 
 modify add user 
 *********************************
 
+remove subject and description th from table from mobile view only 
+this is html "<div class="content">
+    <div class="user">
+        <a class="add" href="{% url 'notification' %}">Add New</a>
+    </div>
+    <div id="table-container">
+        <table id="customers">
+            <tr>
+                <th>Sr No</th>
+                <th class="details-header">Subject</th>
+                <th class="details-header">Description</th>
+                <th>Username</th>
+                <!-- <th>Action</th>    -->
+            </tr>
+            
+            {% for i in noti_data %}
+            <tr>
+                <td>{{ i.sr }}</td>
+                <td class="details-toggle">{{ i.subject }}</td>
+                <td class="details-toggle">{{ i.description }}</td> 
+                <td><a href="#" class="username-link" data-subject="{{ i.subject }}" data-description="{{ i.description }}">{{ i.username }}</a></td>
+                <!-- <td>
+                    <a href="#" class="edit-btn">Edit</a>
+                    <a href="#" class="delete-btn">Delete</a>
+                </td>    -->
+            </tr>
+                {% endfor %}
+        </table>
+    </div>
+    <div id="details-display"></div>
+</div>"
+this is media quries "
+@media (max-width: 768px) {
+    #table-container {
+        padding: 15px;
+        background-color: #ffffff;
+        width:650px;
+        margin-left:-240px;
+    }
 
+    #customers {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
 
+    #customers th,
+    #customers td {
+        padding: 5px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+    }
 
+    #customers th {
+        background-color: #e3e7ea;
+        font-weight: bold;
+    }
+
+    #customers tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .user {
+        margin-top: 70px;
+        margin-left:-230px;
+    }
+
+    .details-toggle {
+        display: none;
+    }
+}
+"
+this is js "<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var usernameLinks = document.querySelectorAll('.username-link');
+        var detailsDisplay = document.getElementById('details-display');
+    
+        usernameLinks.forEach(function(link) {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                var subject = this.getAttribute('data-subject');
+                var description = this.getAttribute('data-description');
+    
+                // Clear previous details
+                detailsDisplay.innerHTML = '';
+    
+                // Create new details elements
+                var subjectElement = document.createElement('p');
+                subjectElement.textContent = 'Subject: ' + subject;
+                var descriptionElement = document.createElement('p');
+                descriptionElement.textContent = 'Description: ' + description;
+    
+                // Append new details to the display area
+                detailsDisplay.appendChild(subjectElement);
+                detailsDisplay.appendChild(descriptionElement);
+            });
+        });
+    });
+    
+    </script>"
