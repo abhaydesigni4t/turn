@@ -649,6 +649,8 @@
                 .mobile-only {
                     display: block; /* Show in mobile view */
                 }
+
+                
             }
             
             @media (min-width: 769px) {
@@ -656,6 +658,22 @@
                     display: none; /* Hide the mobile-only content for desktop */
                 }
             }
+
+            /* For mobile view only (max-width: 768px) */
+            @media (max-width: 768px) {
+                br {
+                    display: none; /* Hide <br> tags on mobile */
+                }
+
+                .user-info,
+                .logout,
+                a {
+                    margin-top: -3px; /* Adjust spacing for mobile view */
+                }
+            }
+
+            
+            
     </style>
 </head>
 
@@ -838,7 +856,18 @@
             var sidebar = document.querySelector('.sidebar');
             sidebar.classList.toggle('active');
         }
-    
+        
+        // Close sidebar when clicking outside
+        document.addEventListener('click', function(event) {
+            var sidebar = document.querySelector('.sidebar');
+            var sidebarToggleIcon = document.querySelector('.sidebar-toggle');
+            
+            // Check if the click is outside the sidebar and the sidebar toggle icon
+            if (!sidebar.contains(event.target) && !sidebarToggleIcon.contains(event.target)) {
+                sidebar.classList.remove('active'); // Close the sidebar
+            }
+        });
+        
         document.addEventListener('DOMContentLoaded', function() {
             // Select all dropdown elements
             var dropdowns = document.querySelectorAll('.dropdown');
@@ -864,6 +893,7 @@
                 });
             });
         });
+        
         
     </script>
     
