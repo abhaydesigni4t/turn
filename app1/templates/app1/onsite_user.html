@@ -373,109 +373,140 @@
         
         @media (max-width: 768px) {
             /* Hide header navigation by default */
-            .header .nav {
-                display: none; /* Default hidden */
+                .header .nav {
+                    display: none; /* Default hidden */
+                }
+            
+                /* Sidebar toggle (left side) */
+                .sidebar-toggle {
+                    display: block;
+                    position: absolute;
+                    top: 15px;
+                    left: 15px;
+                    font-size: 24px;
+                    cursor: pointer;
+                }
+            
+            
+                /* Sidebar */
+                .sidebar {
+                    width: 210px;
+                    transform: translateX(-250px); /* Hidden by default */
+                    transition: transform 0.3s ease;
+                }
+            
+                .sidebar.active {
+                    transform: translateX(0); /* Show sidebar */
+                }
+            
+                /* Header nav (hidden by default, slides in from top when active) */
+                .nav {
+                    display: flex;
+                    flex-direction: column;
+                    position: fixed;
+                    top: -100%; /* Initially off-screen */
+                    right: 0; /* Align to the right */
+                    background-color: #fff;
+                    z-index: 1000;
+                    padding: 10px;
+                    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+                    transition: top 0.3s ease; /* Smooth slide-in effect */
+                    width: 120px; /* Set width for header */
+                }
+            
+                .nav.active {
+                    top: 50px; /* Slide down into view */
+                }
+            
+                .nav a {
+                    padding: 10px;
+                    color: #333;
+                    text-decoration: none;
+                    display: block;
+                    font-size: 14px;
+                    border-bottom: 1px solid #ddd;
+                }
+            
+                .nav a:hover {
+                    background-color: #f0f0f0;
+                }
+            
+                /* General Dropdown Styles */
+                .dropdown {
+                    position: relative;
+                    display: inline-block;
+                }
+        
+                .dropbtn {
+                    color: white;
+                    padding: 10px;
+                    font-size: 16px;
+                    border: none;
+                    cursor: pointer;
+                }
+        
+                .dropdown-content {
+                    display: none;
+                    position: absolute;
+                    right: 0; /* Align dropdown to the right */
+                    background-color: #f9f9f9;
+                    min-width: 200px;
+                    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+                    z-index: 1;
+                    margin-left:50px;
+                }
+        
+                .dropdown-content a {
+                    color: black;
+                    padding: 6px 10px;
+                    text-decoration: none;
+                    display: block;
+                }
+        
+                .dropdown-content a:hover {
+                    background-color: #f1f1f1;
+                }
+        
+                .dropdown:hover .dropdown-content {
+                    display: block; /* Show the dropdown on hover */
+                }
+        
+            .user {
+                margin-top: 70px;
+                margin-left:-230px;
             }
         
-            /* Sidebar toggle (left side) */
-            .sidebar-toggle {
-                display: block;
-                position: absolute;
-                top: 15px;
-                left: 15px;
-                font-size: 24px;
-                cursor: pointer;
+            .mobile-only {
+                display: block; /* Show in mobile view */
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .mobile-only {
+                display: none; /* Hide the mobile-only content for desktop */
+            }
+        }
+        
+        /* For mobile view only (max-width: 768px) */
+        @media (max-width: 768px) {
+            br {
+                display: none; /* Hide <br> tags on mobile */
             }
         
-            /* Header toggle (right side) */
-            .header-toggle {
-                display: block;
-                position: absolute;
-                top: 15px;
-                right: 15px;
-                font-size: 24px;
-                cursor: pointer;
+            .user-info,
+            .logout,
+            a {
+                margin-top: -3px; /* Adjust spacing for mobile view */
             }
-        
-            /* Sidebar */
-            .sidebar {
-                width: 200px;
-                transform: translateX(-250px); /* Hidden by default */
-                transition: transform 0.3s ease;
-            }
-        
-            .sidebar.active {
-                transform: translateX(0); /* Show sidebar */
-            }
-        
-            /* Header nav (hidden by default, slides in from top when active) */
-            .nav {
-                display: flex;
-                flex-direction: column;
-                position: fixed;
-                top: -100%; /* Initially off-screen */
-                right: 0; /* Align to the right */
-                background-color: #fff;
-                z-index: 1000;
-                padding: 10px;
-                box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-                transition: top 0.3s ease; /* Smooth slide-in effect */
-                width: 120px; /* Set width for header */
-            }
-        
-            .nav.active {
-                top: 50px; /* Slide down into view */
-            }
-        
-            .nav a {
-                padding: 10px;
-                color: #333;
-                text-decoration: none;
-                display: block;
-                font-size: 14px;
-                border-bottom: 1px solid #ddd;
-            }
-        
-            .nav a:hover {
-                background-color: #f0f0f0;
-            }
-        
-            .dropdown {
-                position: relative;
-            }
-        
-            .dropdown-content {
-                display: none;
-                position: static;
-                background-color: #f9f9f9;
-                padding: 0;
-                width: 120%;
-                box-shadow: none;
-            }
-        
-            .dropdown.active .dropdown-content {
-                display: block;
-            }
-        
-            .dropdown-content a {
-                padding: 10px;
-                display: block;
-                color: #333;
-                text-decoration: none;
-                border-bottom: 1px solid #ddd;
-            }
-        
-            .dropdown-content a:hover {
-                background-color: #f0f0f0;
-            }
-        
+        }
+
+        @media (max-width: 768px) {
             /* Additional styles for table and logo */
             #table-container {
-                margin-left: 0;
                 padding: 15px;
                 background-color: #ffffff;
                 width:350px;
-                margin-left:-215px;
+                margin-left:-232px;
             }
         
             #customers {
@@ -499,38 +530,39 @@
             #customers tbody tr:nth-child(even) {
                 background-color: #f9f9f9;
             }
-        
-            .logo img {
-                max-height: 40px;
-            }
-        
+
         }
 
         @media only screen and (max-width: 600px) {
             .pagination a {
-                padding: 8px 10px;
+                padding: 0px 2px;
+                margin-left:-6px;
             }
+
+            .filter-container {
+                padding: 1px;
+                flex-direction: column;
+                width: 100%;
+                align-items: flex-start;
+                margin-left: -40px;
+            }
+
         }
     </style>
 </head>
 
 <body>
     <header>
-      
         <div class="hidden-desktop sidebar-toggle" onclick="toggleSidebar()">
             <i class="fas fa-bars"></i>
         </div>
     
-        <!-- Header three-line icon (right side) -->
-        <div class="hidden-desktop header-toggle" onclick="toggleHeaderMenu()">
-            <i class="fas fa-bars"></i>
-        </div>
-
         <nav class="nav">
             <a href="{% url 'get_all' %}"><i class="fas fa-user-friends"></i>User Management</a>
             <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-database"></i> Asset Management</a>
             <a href="{% url 'site_docu' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-folder-open"></i> Site Documents</a>
             <a href="{% url 'onsite_user' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-user-circle"></i> On Site User</a>
+            
             <div class="dropdown">
                 <a href="#" class="dropbtn"><i class="fas fa-language"></i> Language</a>
                 <div class="dropdown-content">
@@ -562,8 +594,7 @@
         </div>
         
         <a href="{% url 'sites' %}?site_name={{ site_name }}"><i class="fas fa-globe"></i> Site Management</a>
-            
-            {% if site_names %}
+        {% if site_names %}
             <div class="dropdownl">
                 <a href="#" class="dropdown-link">
                     <i class="fa fa-circle"></i> {{ site_name }}
@@ -575,13 +606,37 @@
                 </div>
             </div>
         {% endif %}
+        <!-- These are header items which will show in the sidebar for mobile view -->
+        <div class="mobile-only">
+            <a href="{% url 'get_all' %}"><i class="fas fa-user-friends"></i> User Management</a>
+            <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-database"></i> Asset Management</a>
+            <a href="{% url 'site_docu' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-folder-open"></i> Site Documents</a>
+            <a href="{% url 'onsite_user' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-user-circle"></i> On Site User</a>
+    
+            <div class="dropdown">
+                <a href="#" class="dropbtn"><i class="fas fa-language"></i> Language</a>
+                <div class="dropdown-content">
+                    <a href="#"><i class="fas fa-globe"></i> English</a>
+                    <a href="#"><i class="fas fa-globe"></i> Spanish</a>
+                </div>
+            </div>
+            
+            <div class="dropdown">
+                <a href="#" class="dropbtn"><i class="fas fa-sliders-h"></i> Settings</a>
+                <div class="dropdown-content">
+                    <a href="{% url 'time' %}?site_name={{ site_name }}"><i class="far fa-clock"></i> Time Schedule</a>
+                    <a href="{% url 'setting_t' %}?site_name={{ site_name }}"><i class="fas fa-exchange-alt"></i> Turnstile</a>
+                    <a href="{% url 'create_subadmin' %}"><i class="fas fa-user-shield"></i>Manage SubAdmins</a>
+                </div>
+            </div>
+        </div>
+    
         <a href="{% url 'report' %}?site_name={{ site_name }}"><i class="fas fa-chart-line"></i> Analytics & Reports</a>
         <a href="{% url 'notification1' %}?site_name={{ site_name }}"><i class="fas fa-bell"></i> Notifications</a>
         <a href="{% url 'company' %}?site_name={{ site_name }}"><i class="fas fa-building"></i> Company</a>
-
+    
         <br> <br> <br> <br> <br> <br> 
-
-
+    
         <div class="user-info">
             <div class="user-details">
                 <img src="{% static 'app1/images/admin_image1.jpg' %}" alt="User">
@@ -715,28 +770,42 @@
             sidebar.classList.toggle('active');
         }
         
-        function toggleHeaderMenu() {
-            var nav = document.querySelector('.nav');
-            nav.classList.toggle('active');
-        }
-        
+        // Close sidebar when clicking outside
         document.addEventListener('click', function(event) {
             var sidebar = document.querySelector('.sidebar');
-            var headerMenu = document.querySelector('.nav');
             var sidebarToggleIcon = document.querySelector('.sidebar-toggle');
-            var headerToggleIcon = document.querySelector('.header-toggle');
-        
-            // Close sidebar if clicked outside
+            
+            // Check if the click is outside the sidebar and the sidebar toggle icon
             if (!sidebar.contains(event.target) && !sidebarToggleIcon.contains(event.target)) {
-                sidebar.classList.remove('active');
-            }
-        
-            // Close header menu if clicked outside
-            if (!headerMenu.contains(event.target) && !headerToggleIcon.contains(event.target)) {
-                headerMenu.classList.remove('active');
+                sidebar.classList.remove('active'); // Close the sidebar
             }
         });
         
+        document.addEventListener('DOMContentLoaded', function() {
+            // Select all dropdown elements
+            var dropdowns = document.querySelectorAll('.dropdown');
+        
+            // Add click event listener to each dropdown button
+            dropdowns.forEach(function(dropdown) {
+                var btn = dropdown.querySelector('.dropbtn');
+                var content = dropdown.querySelector('.dropdown-content');
+        
+                btn.addEventListener('click', function(event) {
+                    // Prevent default action of the anchor tag
+                    event.preventDefault();
+        
+                    // Toggle the visibility of the dropdown content
+                    content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                });
+        
+                // Close the dropdown if clicked outside
+                document.addEventListener('click', function(event) {
+                    if (!dropdown.contains(event.target)) {
+                        content.style.display = 'none';
+                    }
+                });
+            });
+        });
     </script>
             
 </body>
