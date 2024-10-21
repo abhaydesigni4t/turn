@@ -2074,11 +2074,87 @@ class DeleteFacialDataImage(APIView):
             return Response("Image not found", status=status.HTTP_404_NOT_FOUND)
 
 
+# from imutils import paths
+# import face_recognition
+# import pickle
+# import cv2
+# from .serializers import FacialImageDataSerializer
+
+# class FacialDataApi(APIView):
+#     def post(self, request):
+#         serializer = FacialImageDataSerializer(data=request.data)
+#         if serializer.is_valid():
+#             email = serializer.validated_data['email']
+#             images = serializer.validated_data['facial_data']
+#             try:
+#                 user = UserEnrolled.objects.get(email=email)
+#                 for image in images:
+#                     user.facial_data = image
+#                     user.save()
+                    
+#                 if images:
+#                     random_image = random.choice(images)
+#                     user.picture = random_image
+#                     user.save()
+                    
+#             except UserEnrolled.DoesNotExist:
+#                 return Response("User not found", status=status.HTTP_404_NOT_FOUND)
+#             user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name))
+#             self.update_pickle(user_folder)
+
+#             return Response("Images uploaded and facial data updated successfully", status=status.HTTP_200_OK)
+
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#     def update_pickle(self, user_folder):
+#         pickle_file_path = os.path.join(user_folder, 'encodings.pickle')
+
+#         imagePaths = list(paths.list_images(user_folder))
+
+#         knownEncodings = []
+#         knownNames = []
+
+#         print(f"Total images found: {len(imagePaths)}")
+
+#         for (i, imagePath) in enumerate(imagePaths):
+#             print(f"--> processing image {i + 1}/{len(imagePaths)}")
+#             name = os.path.basename(os.path.dirname(imagePath))
+
+#             image = cv2.imread(imagePath)
+#             rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+#             boxes = face_recognition.face_locations(rgb, model="hog")
+#             encodings = face_recognition.face_encodings(rgb, boxes)
+
+#             print(f"Found {len(encodings)} face(s) in {imagePath}")
+
+#             for encoding in encodings:
+#                 knownEncodings.append(encoding)
+#                 knownNames.append(name)
+
+#         #print('--> encodings:', knownEncodings)
+#         # print('--> names:', knownNames)
+
+#         data = {"encodings": knownEncodings, "names": knownNames}
+#         with open(pickle_file_path, 'wb') as f:
+#             pickle.dump(data, f)
+
+#         print('--> encodings finalized') 
+
+
+
+import os
+import random
 from imutils import paths
 import face_recognition
 import pickle
 import cv2
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.conf import settings
 from .serializers import FacialImageDataSerializer
+from .models import UserEnrolled
 
 class FacialDataApi(APIView):
     def post(self, request):
@@ -2088,18 +2164,28 @@ class FacialDataApi(APIView):
             images = serializer.validated_data['facial_data']
             try:
                 user = UserEnrolled.objects.get(email=email)
+
+                # Create user folder if it doesn't exist
+                user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name))
+                os.makedirs(user_folder, exist_ok=True)
+
+                # Save images to the user's folder
                 for image in images:
-                    user.facial_data = image
-                    user.save()
-                    
+                    image_name = f"{user.name}_{random.randint(1000, 9999)}.jpg"  # Random name to avoid conflicts
+                    image_path = os.path.join(user_folder, image_name)
+                    with open(image_path, 'wb') as f:
+                        f.write(image.read())  # Save the image data to a file
+
+                # Randomly select an image for the user's picture
                 if images:
                     random_image = random.choice(images)
                     user.picture = random_image
                     user.save()
-                    
+
             except UserEnrolled.DoesNotExist:
                 return Response("User not found", status=status.HTTP_404_NOT_FOUND)
-            user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name))
+
+            # Update encodings pickle file
             self.update_pickle(user_folder)
 
             return Response("Images uploaded and facial data updated successfully", status=status.HTTP_200_OK)
@@ -2132,14 +2218,13 @@ class FacialDataApi(APIView):
                 knownEncodings.append(encoding)
                 knownNames.append(name)
 
-        #print('--> encodings:', knownEncodings)
-        # print('--> names:', knownNames)
-
         data = {"encodings": knownEncodings, "names": knownNames}
         with open(pickle_file_path, 'wb') as f:
             pickle.dump(data, f)
 
-        print('--> encodings finalized') 
+        print('--> encodings finalized')
+
+
         
 '''     
 class FacialDataApi_extra(APIView):

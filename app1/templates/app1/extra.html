@@ -11,43 +11,132 @@ support@assure-tech.online
 
 make parameter dynamic
 
-create_subadmin,facial_data image,upload facial_data image
 
 
 modify add user 
 *********************************
 
-<body>
-    <div class="background-overlay"></div>
-    <div class="auth-container">
-        <div class="logo-container">
-            <img src="{% static 'app1/images/logo.png' %}" alt="Assure Tech Logo">
-        </div>
+this is get view i think this api use os 
+def upload_facial_data_image(request, user_id):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+
+    # Filter sites based on user permissions
+    user = request.user
+    if user.is_staff and not user.is_superuser:
+        # If the user is a sub-admin, get the sites associated with them
+        sites = user.sites.all()
+    else:
+        # If the user is a super admin, get all sites
+        sites = Site.objects.all()
+
+    # Prepare the list of site names for the dropdown
+    site_names = [(site.name, site.name) for site in sites]
     
-       
-        <div class="auth-card">
-           
-            <div class="auth-tabs">
-                <div id="signin-tab" class="active"style="font-size: 20px;">Sign in</div>
-                {% comment %} <div id="signup-tab">Sign up</div> {% endcomment %}
-            </div>
-            
-            <!-- Login Form -->
-            <form id="signin-form" action="{% url 'login' %}" method="POST" class="auth-form active">
-                {% csrf_token %}
-                <label for="signin-email">E-mail</label>
-                <input type="email" id="signin-email" name="email" placeholder="Email" required>
-                <label for="signin-password">Password</label>
-                <input type="password" id="signin-password" name="password" placeholder="Password" required>
-                <button type="submit">Get Started</button>
-                {% if form.errors %}
-                    <div class="error-message">
-                        {% for field, error in form.errors.items %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </form>
-            
-        </div>
-    </div>
+    user = get_object_or_404(UserEnrolled, pk=user_id)
+    user_folder = os.path.join('media', 'facial_data', user.get_folder_name())
+    os.makedirs(user_folder, exist_ok=True)
+
+    if request.method == 'POST':
+        form = SingleFileUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            image = request.FILES['facial_data']
+            file_path = os.path.join(user_folder, image.name)
+            with open(file_path, 'wb+') as destination:
+                for chunk in image.chunks():
+                    destination.write(chunk)
+            update_pickle(user_folder)  # Update any relevant data or pickle files
+
+            # Get all images in the user's facial_data folder
+            user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+
+            # Debugging: Print the images found in the folder
+            print(f"Images found in {user_folder}: {user_images}")
+
+            # Set a random image as the user's picture
+            if user_images:
+                random_image = random.choice(user_images)
+                user.picture = os.path.join('facial_data', user.get_folder_name(), random_image)
+                user.save()
+
+                # Debugging: Print the selected random image
+                print(f"Selected random image for {user}: {random_image}")
+            else:
+                user.picture = None  # No image found, set picture to None or another default value
+                user.save()
+
+            messages.success(request, 'Image uploaded successfully.')
+            return redirect('show_facial_data_images', user_id=user_id)
+    else:
+        form = SingleFileUploadForm()
+
+    return render(request, 'app1/upload_facial_data_image.html', {
+        'form': form,
+        'user_id': user_id,
+         'site_names': site_names,  # Add the site dropdown to the template context
+        'site_name': site_name  # Pass the current selected site name
+    })
+
+
+this is post facial_data api to post multiple images so here also use os 
+class FacialDataApi(APIView):
+    def post(self, request):
+        serializer = FacialImageDataSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            images = serializer.validated_data['facial_data']
+            try:
+                user = UserEnrolled.objects.get(email=email)
+                for image in images:
+                    user.facial_data = image
+                    user.save()
+                    
+                if images:
+                    random_image = random.choice(images)
+                    user.picture = random_image
+                    user.save()
+                    
+            except UserEnrolled.DoesNotExist:
+                return Response("User not found", status=status.HTTP_404_NOT_FOUND)
+            user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', str(user.name))
+            self.update_pickle(user_folder)
+
+            return Response("Images uploaded and facial data updated successfully", status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update_pickle(self, user_folder):
+        pickle_file_path = os.path.join(user_folder, 'encodings.pickle')
+
+        imagePaths = list(paths.list_images(user_folder))
+
+        knownEncodings = []
+        knownNames = []
+
+        print(f"Total images found: {len(imagePaths)}")
+
+        for (i, imagePath) in enumerate(imagePaths):
+            print(f"--> processing image {i + 1}/{len(imagePaths)}")
+            name = os.path.basename(os.path.dirname(imagePath))
+
+            image = cv2.imread(imagePath)
+            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+            boxes = face_recognition.face_locations(rgb, model="hog")
+            encodings = face_recognition.face_encodings(rgb, boxes)
+
+            print(f"Found {len(encodings)} face(s) in {imagePath}")
+
+            for encoding in encodings:
+                knownEncodings.append(encoding)
+                knownNames.append(name)
+
+        #print('--> encodings:', knownEncodings)
+        # print('--> names:', knownNames)
+
+        data = {"encodings": knownEncodings, "names": knownNames}
+        with open(pickle_file_path, 'wb') as f:
+            pickle.dump(data, f)
+
+        print('--> encodings finalized') 
